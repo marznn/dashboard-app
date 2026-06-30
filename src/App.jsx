@@ -9,6 +9,7 @@ import Sleep from './pages/Sleep.jsx'
 import Water from './pages/Water.jsx'
 import Finance from './pages/Finance.jsx'
 import Calendar from './pages/Calendar.jsx'
+import Goals from './pages/Goals.jsx'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -36,7 +37,7 @@ export default function App() {
             <Route path="/water" element={<Water />} />
             <Route path="/finance" element={<Finance />} />
             <Route path="/calendar" element={<Calendar />} />
-            <Route path="/goals" element={<Placeholder title="Goals" />} />
+            <Route path="/goals" element={<Goals />} />
             <Route path="*" element={<Placeholder title="Not found" />} />
           </Routes>
         </div>
