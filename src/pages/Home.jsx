@@ -8,7 +8,7 @@ import {
 import { computeTargets } from '../lib/nutrition.js'
 import {
   PageHeader, Card, SectionTitle, Empty, ProgressBar,
-  todayStr, ymd, monthRange, monthLabel, fmtMoney, fmtHm,
+  todayStr, recentDates, logicalNow, monthRange, monthLabel, fmtMoney, fmtHm,
 } from '../components/ui.jsx'
 
 export default function Home() {
@@ -25,11 +25,9 @@ export default function Home() {
 
   async function load() {
     setLoading(true)
-    const now = new Date()
     const today = todayStr()
-    const last7Start = ymd(now.getFullYear(), now.getMonth(), now.getDate() - 6)
-    const last7Dates = Array.from({ length: 7 }, (_, i) =>
-      ymd(now.getFullYear(), now.getMonth(), now.getDate() - i))
+    const last7Dates = recentDates(7)
+    const last7Start = last7Dates[last7Dates.length - 1]
     const { start: monthStart, end: monthEnd } = monthRange()
 
     const [
@@ -106,7 +104,7 @@ export default function Home() {
     <div>
       <PageHeader
         title={dashTitle}
-        subtitle={new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+        subtitle={logicalNow().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
       />
 
       <OvrCard ovr={ovr} cats={cats} enabledMap={enabledMap} />

@@ -79,6 +79,11 @@ persist** (in `load()`), so the score only moves while the user visits the dashb
 ## Conventions
 - **Dates:** always stamp the **local** date on inserts via `todayStr()` (see `ui.jsx`). Do NOT rely
   on the DB `current_date` default — it's UTC and caused a meal/cardio "today" mismatch bug.
+- **Day boundary = 3am, not midnight.** `DAY_RESET_HOUR` (ui.jsx, currently 3) shifts the "logical
+  day" so daily trackers reset at 3am — anything logged after midnight up to 3am still counts toward
+  the previous day (handles late-night logging). All "today / this week / this month" helpers
+  (`todayStr`, `recentDates`, `weekStartStr`, `monthRange`, `monthLabel`) and the OVR daily drift are
+  anchored on `logicalNow()`. Use these, never raw `new Date()`, for date logic.
 - **RLS:** every table has `user_id uuid default auth.uid()` + a `for all to authenticated`
   policy `using/with check (user_id = auth.uid())`. New tables must follow this.
 - **Cross-cutting settings** (sleep goal, water goal, monthly budget) live on `user_settings`.

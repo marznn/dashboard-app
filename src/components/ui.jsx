@@ -113,8 +113,21 @@ function localDateStr(d) {
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10)
 }
 
+// The app's "day" rolls over at this local hour instead of midnight. Anything
+// happening before it (e.g. a 1am post-midnight meal) still counts toward the
+// previous calendar day; the new day's blank slate begins at DAY_RESET_HOUR.
+// 3am handles typical late-night logging.
+export const DAY_RESET_HOUR = 3
+
+// "Now", shifted back by the reset hour, so its LOCAL date is the current
+// *logical* day. Every "today / this week / this month" helper below is anchored
+// on this, so all daily trackers reset together at the 3am boundary.
+export function logicalNow() {
+  return new Date(Date.now() - DAY_RESET_HOUR * 3600 * 1000)
+}
+
 export function todayStr() {
-  return localDateStr(new Date())
+  return localDateStr(logicalNow())
 }
 
 // YYYY-MM-DD for a given local year/month(0-based)/day
@@ -122,24 +135,30 @@ export function ymd(year, month, day) {
   return localDateStr(new Date(year, month, day))
 }
 
-// Monday of the current week, as YYYY-MM-DD
+// The last `n` logical dates, most recent first, as YYYY-MM-DD.
+export function recentDates(n) {
+  const d = logicalNow()
+  return Array.from({ length: n }, (_, i) => ymd(d.getFullYear(), d.getMonth(), d.getDate() - i))
+}
+
+// Monday of the current (logical) week, as YYYY-MM-DD
 export function weekStartStr() {
-  const d = new Date()
+  const d = logicalNow()
   const offsetToMonday = (d.getDay() + 6) % 7 // Sun=0 -> 6, Mon=1 -> 0
   d.setDate(d.getDate() - offsetToMonday)
   return localDateStr(d)
 }
 
-// Current month as { start, end } YYYY-MM-DD (end = first of next month, exclusive)
+// Current (logical) month as { start, end } YYYY-MM-DD (end = first of next month, exclusive)
 export function monthRange() {
-  const d = new Date()
+  const d = logicalNow()
   const start = localDateStr(new Date(d.getFullYear(), d.getMonth(), 1))
   const end = localDateStr(new Date(d.getFullYear(), d.getMonth() + 1, 1))
   return { start, end }
 }
 
 export function monthLabel() {
-  return new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+  return logicalNow().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
 }
 
 export function fmtMoney(n) {
