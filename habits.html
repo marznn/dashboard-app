@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habits · Pulse</title>
+  <meta name="description" content="Pulse — track your daily habits and streaks." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%226%22 fill=%22%236366f1%22/></svg>" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#eef2ff',100:'#e0e7ff',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca' },
+          },
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased">
+  <a href="#main-content" class="skip-link absolute left-2 top-2 z-50 -translate-y-20 focus:translate-y-0 transition-transform bg-brand-500 text-white text-sm font-medium px-3 py-2 rounded-md">Skip to main content</a>
+
+  <div id="sidebar-overlay" class="hidden fixed inset-0 z-20 bg-black/60 backdrop-blur-sm lg:hidden"></div>
+
+  <div class="min-h-screen lg:flex">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-72 -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out lg:static lg:flex lg:flex-col border-r border-white/10 bg-slate-900/60 backdrop-blur-xl flex flex-col">
+      <div class="flex items-center justify-between px-6 h-16 border-b border-white/10 shrink-0">
+        <a href="index.html" class="flex items-center gap-2.5 font-display font-bold text-lg text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded-md">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/30">
+            <i data-lucide="activity" class="h-4.5 w-4.5 text-white" aria-hidden="true"></i>
+          </span>
+          Pulse
+        </a>
+        <button id="sidebar-close" type="button" aria-label="Close navigation menu" class="lg:hidden cursor-pointer rounded-md p-1.5 text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+          <i data-lucide="x" class="h-5 w-5" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <nav aria-label="Main navigation" class="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+        <p class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">My Day</p>
+        <a href="index.html" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+          <i data-lucide="home" class="h-4.5 w-4.5 text-slate-400 group-hover:text-white" aria-hidden="true"></i>
+          Overview
+        </a>
+        <a href="tasks.html" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+          <i data-lucide="check-square" class="h-4.5 w-4.5 text-slate-400 group-hover:text-white" aria-hidden="true"></i>
+          Tasks
+        </a>
+        <a href="calendar.html" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+          <i data-lucide="calendar-days" class="h-4.5 w-4.5 text-slate-400 group-hover:text-white" aria-hidden="true"></i>
+          Calendar
+        </a>
+        <a href="notes.html" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+          <i data-lucide="notebook-pen" class="h-4.5 w-4.5 text-slate-400 group-hover:text-white" aria-hidden="true"></i>
+          Notes
+        </a>
+        <a href="habits.html" aria-current="page" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium bg-brand-500/15 text-brand-400 ring-1 ring-inset ring-brand-500/30">
+          <i data-lucide="flame" class="h-4.5 w-4.5" aria-hidden="true"></i>
+          Habits
+        </a>
+      </nav>
+
+      <div class="p-4 border-t border-white/10 shrink-0">
+        <div class="rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 p-4 shadow-lg shadow-brand-900/40">
+          <div class="flex items-center gap-2">
+            <i data-lucide="flame" class="h-4 w-4 text-amber-300" aria-hidden="true"></i>
+            <p class="font-display text-sm font-semibold text-white">12-day streak</p>
+          </div>
+          <p class="mt-1 text-xs text-brand-100/80">You've kept every daily habit going for 12 days straight.</p>
+          <a href="habits.html" class="mt-3 block w-full cursor-pointer rounded-lg bg-white px-3 py-2 text-center text-xs font-semibold text-brand-700 hover:bg-brand-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white">View habits</a>
+        </div>
+        <div class="mt-4 flex items-center gap-3 px-1">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-700 text-xs font-semibold text-white">JD</span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium text-white">Jordan Diaz</p>
+            <p class="truncate text-xs text-slate-400">jordan@pulse.io</p>
+          </div>
+          <button type="button" aria-label="Log out" class="cursor-pointer rounded-md p-1.5 text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+            <i data-lucide="log-out" class="h-4 w-4" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="flex-1 min-w-0">
+      <header class="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8">
+        <button id="sidebar-open" type="button" aria-label="Open navigation menu" aria-expanded="false" class="lg:hidden cursor-pointer rounded-md p-2 text-slate-300 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+          <i data-lucide="menu" class="h-5 w-5" aria-hidden="true"></i>
+        </button>
+        <h1 class="font-display text-lg font-bold text-white">Habits</h1>
+        <div class="ml-auto flex items-center gap-2 sm:gap-3">
+          <span class="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-semibold text-white">JD</span>
+        </div>
+      </header>
+
+      <main id="main-content" class="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 max-w-[1600px]">
+        <div class="fade-up flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 class="font-display text-2xl font-bold text-white">Habits</h2>
+            <p class="mt-1 text-sm text-slate-400">7 habits tracked · 5 completed today</p>
+          </div>
+          <button type="button" class="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-brand-500 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
+            <i data-lucide="plus" class="h-4 w-4" aria-hidden="true"></i>
+            Add habit
+          </button>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="fade-up grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+          <div class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-5">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/15 text-amber-400"><i data-lucide="flame" class="h-5 w-5" aria-hidden="true"></i></span>
+            <p class="mt-4 text-sm text-slate-400">Current Streak</p>
+            <p class="mt-1 font-display text-2xl font-bold text-white">12 days</p>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-5">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-brand-500/15 text-brand-400"><i data-lucide="trophy" class="h-5 w-5" aria-hidden="true"></i></span>
+            <p class="mt-4 text-sm text-slate-400">Longest Streak</p>
+            <p class="mt-1 font-display text-2xl font-bold text-white">28 days</p>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-5">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/15 text-emerald-400"><i data-lucide="target" class="h-5 w-5" aria-hidden="true"></i></span>
+            <p class="mt-4 text-sm text-slate-400">This Week</p>
+            <p class="mt-1 font-display text-2xl font-bold text-white">78%</p>
+          </div>
+        </div>
+
+        <div class="fade-up grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Today's habits -->
+          <div class="lg:col-span-2 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-5 sm:p-6">
+            <h3 class="font-display text-base font-semibold text-white mb-4">Today, Jun 29</h3>
+            <ul class="divide-y divide-white/5">
+              <li class="flex items-center gap-3 py-3">
+                <input type="checkbox" data-strike="habit-1" checked class="h-4.5 w-4.5 rounded border-white/20 bg-white/5 text-brand-500 focus:ring-2 focus:ring-brand-400" />
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400"><i data-lucide="footprints" class="h-4 w-4" aria-hidden="true"></i></span>
+                <span id="habit-1" class="flex-1 text-sm font-medium text-slate-500 line-through">Morning Run</span>
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-400"><i data-lucide="flame" class="h-3.5 w-3.5" aria-hidden="true"></i>12</span>
+              </li>
+              <li class="flex items-center gap-3 py-3">
+                <input type="checkbox" data-strike="habit-2" checked class="h-4.5 w-4.5 rounded border-white/20 bg-white/5 text-brand-500 focus:ring-2 focus:ring-brand-400" />
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-sky-500/15 text-sky-400"><i data-lucide="book-open" class="h-4 w-4" aria-hidden="true"></i></span>
+                <span id="habit-2" class="flex-1 text-sm font-medium text-slate-500 line-through">Read 20 minutes</span>
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-400"><i data-lucide="flame" class="h-3.5 w-3.5" aria-hidden="true"></i>9</span>
+              </li>
+              <li class="flex items-center gap-3 py-3">
+                <input type="checkbox" data-strike="habit-3" class="h-4.5 w-4.5 rounded border-white/20 bg-white/5 text-brand-500 focus:ring-2 focus:ring-brand-400" />
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-violet-500/15 text-violet-400"><i data-lucide="brain" class="h-4 w-4" aria-hidden="true"></i></span>
+                <span id="habit-3" class="flex-1 text-sm font-medium text-slate-200">Meditate</span>
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-400"><i data-lucide="flame" class="h-3.5 w-3.5" aria-hidden="true"></i>3</span>
+              </li>
+              <li class="flex items-center gap-3 py-3">
+                <input type="checkbox" data-strike="habit-4" class="h-4.5 w-4.5 rounded border-white/20 bg-white/5 text-brand-500 focus:ring-2 focus:ring-brand-400" />
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-red-500/15 text-red-400"><i data-lucide="cookie" class="h-4 w-4" aria-hidden="true"></i></span>
+                <span id="habit-4" class="flex-1 text-sm font-medium text-slate-200">No Sugar</span>
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-400"><i data-lucide="flame" class="h-3.5 w-3.5" aria-hidden="true"></i>1</span>
+              </li>
+              <li class="flex items-center gap-3 py-3">
+                <input type="checkbox" data-strike="habit-5" checked class="h-4.5 w-4.5 rounded border-white/20 bg-white/5 text-brand-500 focus:ring-2 focus:ring-brand-400" />
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-sky-500/15 text-sky-400"><i data-lucide="droplet" class="h-4 w-4" aria-hidden="true"></i></span>
+                <span id="habit-5" class="flex-1 text-sm font-medium text-slate-500 line-through">Hydration Goal</span>
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-400"><i data-lucide="flame" class="h-3.5 w-3.5" aria-hidden="true"></i>12</span>
+              </li>
+              <li class="flex items-center gap-3 py-3">
+                <input type="checkbox" data-strike="habit-6" checked class="h-4.5 w-4.5 rounded border-white/20 bg-white/5 text-brand-500 focus:ring-2 focus:ring-brand-400" />
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-violet-500/15 text-violet-400"><i data-lucide="notebook-pen" class="h-4 w-4" aria-hidden="true"></i></span>
+                <span id="habit-6" class="flex-1 text-sm font-medium text-slate-500 line-through">Journal</span>
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-400"><i data-lucide="flame" class="h-3.5 w-3.5" aria-hidden="true"></i>20</span>
+              </li>
+              <li class="flex items-center gap-3 py-3">
+                <input type="checkbox" data-strike="habit-7" checked class="h-4.5 w-4.5 rounded border-white/20 bg-white/5 text-brand-500 focus:ring-2 focus:ring-brand-400" />
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400"><i data-lucide="bone" class="h-4 w-4" aria-hidden="true"></i></span>
+                <span id="habit-7" class="flex-1 text-sm font-medium text-slate-500 line-through">Stretch</span>
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-400"><i data-lucide="flame" class="h-3.5 w-3.5" aria-hidden="true"></i>12</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Weekly completion chart -->
+          <div class="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-5 sm:p-6">
+            <h3 class="font-display text-base font-semibold text-white mb-1">Completion Rate</h3>
+            <p class="text-xs text-slate-400 mb-4">% of habits done per day</p>
+            <div class="chart-wrap h-64">
+              <canvas id="completionChart" role="img" aria-label="Bar chart showing percentage of daily habits completed for the past 7 days"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly heatmap -->
+        <section class="fade-up rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-5 sm:p-6" aria-labelledby="heatmap-heading">
+          <h3 id="heatmap-heading" class="font-display text-base font-semibold text-white mb-1">This Week</h3>
+          <p class="text-xs text-slate-400 mb-4">Jun 23 &ndash; Jun 29</p>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[640px] text-sm">
+              <caption class="sr-only">Weekly habit completion grid, one row per habit and one column per day</caption>
+              <thead>
+                <tr class="text-left text-xs uppercase tracking-wider text-slate-500">
+                  <th scope="col" class="py-2 pr-4 font-medium">Habit</th>
+                  <th scope="col" class="px-2 py-2 text-center font-medium">Tue 23</th>
+                  <th scope="col" class="px-2 py-2 text-center font-medium">Wed 24</th>
+                  <th scope="col" class="px-2 py-2 text-center font-medium">Thu 25</th>
+                  <th scope="col" class="px-2 py-2 text-center font-medium">Fri 26</th>
+                  <th scope="col" class="px-2 py-2 text-center font-medium">Sat 27</th>
+                  <th scope="col" class="px-2 py-2 text-center font-medium">Sun 28</th>
+                  <th scope="col" class="px-2 py-2 text-center font-medium text-brand-400">Mon 29</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/5">
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-slate-200">Morning Run</td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-slate-200">Read 20 minutes</td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-slate-200">Meditate</td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-slate-200">No Sugar</td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-slate-200">Hydration Goal</td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-slate-200">Journal</td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-4 font-medium text-slate-200">Stretch</td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="circle" class="inline h-4.5 w-4.5 text-slate-700" aria-label="Not completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                  <td class="px-2 py-2.5 text-center"><i data-lucide="check-circle-2" class="inline h-4.5 w-4.5 text-emerald-400" aria-label="Completed"></i></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+  <script>
+    new Chart(document.getElementById('completionChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Tue 23', 'Wed 24', 'Thu 25', 'Fri 26', 'Sat 27', 'Sun 28', 'Mon 29'],
+        datasets: [{
+          label: 'Completion %',
+          data: [71, 71, 57, 86, 86, 71, 71],
+          backgroundColor: '#6366f1',
+          borderRadius: 6,
+          maxBarThickness: 28,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            padding: 10,
+            titleColor: '#f8fafc',
+            bodyColor: '#cbd5e1',
+            callbacks: { label: (ctx) => ' ' + ctx.parsed.y + '%' },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+          y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#94a3b8', callback: (v) => v + '%' } },
+        },
+      },
+    });
+  </script>
+</body>
+</html>
