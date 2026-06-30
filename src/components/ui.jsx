@@ -103,6 +103,11 @@ export function todayStr() {
   return localDateStr(new Date())
 }
 
+// YYYY-MM-DD for a given local year/month(0-based)/day
+export function ymd(year, month, day) {
+  return localDateStr(new Date(year, month, day))
+}
+
 // Monday of the current week, as YYYY-MM-DD
 export function weekStartStr() {
   const d = new Date()
