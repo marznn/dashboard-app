@@ -5,6 +5,7 @@ import { Sidebar, BottomNav } from './components/Nav.jsx'
 import Placeholder from './pages/Placeholder.jsx'
 import Workout from './pages/Workout.jsx'
 import Nutrition from './pages/Nutrition.jsx'
+import Sleep from './pages/Sleep.jsx'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -28,7 +29,7 @@ export default function App() {
             <Route path="/" element={<Placeholder title="Home — OVR & Weekly Review" />} />
             <Route path="/workout" element={<Workout />} />
             <Route path="/nutrition" element={<Nutrition />} />
-            <Route path="/sleep" element={<Placeholder title="Sleep Tracker" />} />
+            <Route path="/sleep" element={<Sleep />} />
             <Route path="/water" element={<Placeholder title="Water Intake" />} />
             <Route path="/finance" element={<Placeholder title="Finance Tracker" />} />
             <Route path="/calendar" element={<Placeholder title="Calendar" />} />

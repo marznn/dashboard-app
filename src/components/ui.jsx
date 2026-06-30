@@ -110,3 +110,19 @@ export function weekStartStr() {
   d.setDate(d.getDate() - offsetToMonday)
   return localDateStr(d)
 }
+
+// Minutes between two "HH:MM" times, wrapping past midnight (e.g. 23:00→07:00 = 8h)
+export function sleepMinutes(bedtime, wake) {
+  if (!bedtime || !wake) return 0
+  const [bh, bm] = bedtime.split(':').map(Number)
+  const [wh, wm] = wake.split(':').map(Number)
+  let mins = wh * 60 + wm - (bh * 60 + bm)
+  if (mins <= 0) mins += 24 * 60
+  return mins
+}
+
+export function fmtHm(minutes) {
+  const h = Math.floor(minutes / 60)
+  const m = Math.round(minutes % 60)
+  return `${h}h ${m}m`
+}
