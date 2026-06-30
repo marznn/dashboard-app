@@ -10,6 +10,7 @@ import Water from './pages/Water.jsx'
 import Finance from './pages/Finance.jsx'
 import Calendar from './pages/Calendar.jsx'
 import Goals from './pages/Goals.jsx'
+import Home from './pages/Home.jsx'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -30,7 +31,7 @@ export default function App() {
       <main className="md:pl-60">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
           <Routes>
-            <Route path="/" element={<Placeholder title="Home — OVR & Weekly Review" />} />
+            <Route path="/" element={<Home />} />
             <Route path="/workout" element={<Workout />} />
             <Route path="/nutrition" element={<Nutrition />} />
             <Route path="/sleep" element={<Sleep />} />
