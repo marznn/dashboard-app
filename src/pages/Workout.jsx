@@ -12,32 +12,36 @@ export default function Workout() {
   const weekStart = weekStartStr()
   const [loading, setLoading] = useState(true)
   const [routines, setRoutines] = useState([])
-  const [session, setSession] = useState(null) // { id, routine_id }
-  const [sets, setSets] = useState([])
+  const [session, setSession] = useState(null) // today's { id, date, routine_id }
+  const [weekSessions, setWeekSessions] = useState([])
+  const [weekSets, setWeekSets] = useState([])
   const [cardio, setCardio] = useState([])
   const [steps, setSteps] = useState('')
   const [settings, setSettings] = useState(null)
 
   async function loadAll() {
     setLoading(true)
-    const [r, ss, st, cg] = await Promise.all([
+    const [r, st, cg, sess] = await Promise.all([
       supabase.from('routines').select('*').order('created_at', { ascending: false }),
-      supabase.from('workout_sessions').select('id, routine_id').eq('date', today).maybeSingle(),
       supabase.from('step_logs').select('steps').eq('date', today).maybeSingle(),
       supabase.from('workout_settings').select('*').maybeSingle(),
+      supabase.from('workout_sessions').select('id, date, routine_id').gte('date', weekStart),
     ])
     setRoutines(r.data ?? [])
-    setSession(ss.data ?? null)
     setSteps(st.data ? String(st.data.steps) : '')
-    setSettings(cg.data ?? { cardio_weekly_goal_min: 150 })
+    setSettings(cg.data ?? { cardio_weekly_goal_min: 150, workout_weekly_goal: 5 })
 
-    if (ss.data) {
+    const sessions = sess.data ?? []
+    setWeekSessions(sessions)
+    setSession(sessions.find((s) => s.date === today) ?? null)
+
+    if (sessions.length) {
       const { data: setRows } = await supabase
-        .from('workout_sets').select('*').eq('session_id', ss.data.id)
+        .from('workout_sets').select('*').in('session_id', sessions.map((s) => s.id))
         .order('created_at', { ascending: true })
-      setSets(setRows ?? [])
+      setWeekSets(setRows ?? [])
     } else {
-      setSets([])
+      setWeekSets([])
     }
 
     const { data: cardioRows } = await supabase
@@ -51,7 +55,7 @@ export default function Workout() {
   async function ensureSession() {
     if (session) return session.id
     const { data } = await supabase
-      .from('workout_sessions').insert({ date: today }).select('id, routine_id').single()
+      .from('workout_sessions').insert({ date: today }).select('id, date, routine_id').single()
     setSession(data)
     return data.id
   }
@@ -59,16 +63,40 @@ export default function Workout() {
   async function setTodayRoutine(routineId) {
     const id = await ensureSession()
     await supabase.from('workout_sessions').update({ routine_id: routineId || null }).eq('id', id)
-    setSession((s) => ({ ...s, routine_id: routineId || null }))
+    loadAll()
   }
 
   if (loading) return <Empty>Loading…</Empty>
 
+  // Today's slice (drives the chips + log card)
+  const todaySets = session ? weekSets.filter((s) => s.session_id === session.id) : []
   const selectedRoutine = routines.find((r) => r.id === session?.routine_id) ?? null
   const routineExercises = selectedRoutine?.exercises ?? []
-  const completed = routineExercises.filter((ex) => sets.some((s) => norm(s.exercise) === norm(ex)))
+  const completed = routineExercises.filter((ex) => todaySets.some((s) => norm(s.exercise) === norm(ex)))
+
+  // Weekly workout count: a day counts when its planned routine is fully done
+  // (or, with no routine planned / routine deleted, when any set was logged).
+  function sessionComplete(s) {
+    const ssets = weekSets.filter((x) => x.session_id === s.id)
+    const rt = s.routine_id ? routines.find((r) => r.id === s.routine_id) : null
+    if (rt && (rt.exercises?.length ?? 0) > 0) {
+      return rt.exercises.every((ex) => ssets.some((x) => norm(x.exercise) === norm(ex)))
+    }
+    return ssets.length > 0
+  }
+  const weeklyWorkouts = weekSessions.filter(sessionComplete).length
+  const workoutGoal = settings?.workout_weekly_goal ?? 5
+
   const weekCardioMin = cardio.reduce((a, c) => a + (c.duration_min || 0), 0)
   const cardioGoal = settings?.cardio_weekly_goal_min ?? 150
+
+  async function saveSetting(patch) {
+    await supabase.from('workout_settings').upsert(
+      { ...patch, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' },
+    )
+    setSettings((s) => ({ ...s, ...patch }))
+  }
 
   return (
     <div>
@@ -80,16 +108,12 @@ export default function Workout() {
           selectedRoutine={selectedRoutine}
           completedCount={completed.length}
           totalCount={routineExercises.length}
+          weeklyWorkouts={weeklyWorkouts}
+          workoutGoal={workoutGoal}
           weekCardioMin={weekCardioMin}
           cardioGoal={cardioGoal}
           onPickRoutine={setTodayRoutine}
-          onSaveCardioGoal={async (min) => {
-            await supabase.from('workout_settings').upsert(
-              { cardio_weekly_goal_min: min, updated_at: new Date().toISOString() },
-              { onConflict: 'user_id' },
-            )
-            setSettings((s) => ({ ...s, cardio_weekly_goal_min: min }))
-          }}
+          onSaveSetting={saveSetting}
         />
         <StepsCard steps={steps} setSteps={setSteps} />
 
@@ -97,7 +121,7 @@ export default function Workout() {
           <LogCard
             selectedRoutine={selectedRoutine}
             completed={completed}
-            sets={sets}
+            sets={todaySets}
             ensureSession={ensureSession}
             reload={loadAll}
           />
@@ -115,33 +139,40 @@ export default function Workout() {
 
 function ProgressCard({
   routines, selectedRoutine, completedCount, totalCount,
-  weekCardioMin, cardioGoal, onPickRoutine, onSaveCardioGoal,
+  weeklyWorkouts, workoutGoal, weekCardioMin, cardioGoal,
+  onPickRoutine, onSaveSetting,
 }) {
-  const [goalInput, setGoalInput] = useState(String(cardioGoal))
-  const [savingGoal, setSavingGoal] = useState(false)
+  const [workoutGoalInput, setWorkoutGoalInput] = useState(String(workoutGoal))
+  const [cardioGoalInput, setCardioGoalInput] = useState(String(cardioGoal))
+  const [savingW, setSavingW] = useState(false)
+  const [savingC, setSavingC] = useState(false)
 
   return (
     <Card>
-      <SectionTitle right={<span className="text-xs text-slate-500">Today</span>}>Progress</SectionTitle>
+      <SectionTitle right={<span className="text-xs text-slate-500">This week</span>}>Progress</SectionTitle>
 
-      <Field label="Today's routine">
-        <Select value={selectedRoutine?.id ?? ''} onChange={(e) => onPickRoutine(e.target.value)}>
-          <option value="">— pick a routine —</option>
-          {routines.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-        </Select>
-      </Field>
-
-      <div className="mt-4 space-y-4">
-        {selectedRoutine ? (
+      <div className="space-y-4">
+        {/* Weekly workouts */}
+        <div>
           <ProgressBar
-            label={`${selectedRoutine.name} completion`}
-            value={completedCount} max={totalCount || 1}
-            unit={` / ${totalCount} ex`} color="bg-emerald-500"
+            label="Workouts this week" unit=" days"
+            value={weeklyWorkouts} max={workoutGoal} color="bg-emerald-500"
           />
-        ) : (
-          <Empty>Pick a routine to track today's workout completion.</Empty>
-        )}
+          <div className="mt-2 flex items-end gap-2">
+            <Field label="Weekly workout goal (days)">
+              <Input type="number" min="0" value={workoutGoalInput}
+                onChange={(e) => setWorkoutGoalInput(e.target.value)} className="w-32" />
+            </Field>
+            <Button variant="ghost" disabled={savingW}
+              onClick={async () => {
+                setSavingW(true)
+                await onSaveSetting({ workout_weekly_goal: Number(workoutGoalInput) || 0 })
+                setSavingW(false)
+              }}>Save goal</Button>
+          </div>
+        </div>
 
+        {/* Weekly cardio */}
         <div>
           <ProgressBar
             label="Cardio this week" unit=" min"
@@ -149,22 +180,36 @@ function ProgressCard({
           />
           <div className="mt-2 flex items-end gap-2">
             <Field label="Weekly cardio goal (min)">
-              <Input
-                type="number" min="0" value={goalInput}
-                onChange={(e) => setGoalInput(e.target.value)} className="w-32"
-              />
+              <Input type="number" min="0" value={cardioGoalInput}
+                onChange={(e) => setCardioGoalInput(e.target.value)} className="w-32" />
             </Field>
-            <Button
-              variant="ghost"
-              disabled={savingGoal}
+            <Button variant="ghost" disabled={savingC}
               onClick={async () => {
-                setSavingGoal(true)
-                await onSaveCardioGoal(Number(goalInput) || 0)
-                setSavingGoal(false)
-              }}
-            >
-              Save goal
-            </Button>
+                setSavingC(true)
+                await onSaveSetting({ cardio_weekly_goal_min: Number(cardioGoalInput) || 0 })
+                setSavingC(false)
+              }}>Save goal</Button>
+          </div>
+        </div>
+
+        {/* Today's plan / completion */}
+        <div className="border-t border-white/10 pt-4">
+          <Field label="Today's routine">
+            <Select value={selectedRoutine?.id ?? ''} onChange={(e) => onPickRoutine(e.target.value)}>
+              <option value="">— pick a routine —</option>
+              {routines.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+            </Select>
+          </Field>
+          <div className="mt-3">
+            {selectedRoutine ? (
+              <ProgressBar
+                label={`${selectedRoutine.name} — today`}
+                value={completedCount} max={totalCount || 1}
+                unit={` / ${totalCount} ex`} color="bg-indigo-500"
+              />
+            ) : (
+              <Empty>Pick today's routine to track completion (and count it toward the week).</Empty>
+            )}
           </div>
         </div>
       </div>
