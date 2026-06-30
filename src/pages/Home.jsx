@@ -87,6 +87,11 @@ export default function Home() {
         { ovr: displayOvr, ovr_date: today, updated_at: new Date().toISOString() },
         { onConflict: 'user_id' },
       )
+      // Snapshot today's OVR for the Progress chart (ignored if phase9 not run).
+      await supabase.from('ovr_history').upsert(
+        { date: today, ovr: displayOvr },
+        { onConflict: 'user_id,date' },
+      )
     }
 
     setOvr(displayOvr)

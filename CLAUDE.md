@@ -33,8 +33,10 @@ src/auth/               AuthProvider (session context) + Login (sign up / sign i
 src/components/Nav.jsx  Sidebar (desktop) + MobileTopBar (hamburger drawer = all sections + Settings).
                         Bottom tab bar was removed — the drawer covers everything.
 src/components/Logo.jsx Pulse mark (liquid-glass tile + animated heartbeat) + wordmark
+src/components/Chart.jsx Dependency-free SVG LineChart / BarChart (Progress page)
 src/components/ui.jsx   Shared primitives (Card, Button, Input, ProgressBar, date/format helpers)
-src/pages/              Home, Workout, Nutrition, Sleep, Water, Finance, Calendar, Goals, Settings
+src/lib/streaks.js      Streak math (computeStreak, daysMeetingGoal, daysPresent)
+src/pages/              Home, Progress, Workout, Nutrition, Sleep, Water, Finance, Calendar, Goals, Settings
 public/                 PWA icons + manifest (home-screen / favicon)
 supabase/               One SQL migration file per phase (run manually in Supabase SQL Editor)
 ```
@@ -70,6 +72,14 @@ persist** (in `load()`), so the score only moves while the user visits the dashb
 - API: `computeCategories(bundle)` → per-category scores; `computePerformance(cats, enabledMap)` →
   `{ perf99, contributing }`; `driftOvr(stored, perf99)` → next value; `isCategoryEnabled`.
 - Color tiers: 0–59 Bronze, 60–74 Silver, 75–84 Gold, 85–94 Diamond, 95–99 Elite.
+
+## Progress
+`src/pages/Progress.jsx` (`/progress`). Streaks + 30-day trends. Streaks (current + best) for
+water goal, sleep goal, calories-on-target, and active days via `lib/streaks.js` (derived from
+existing logs, no migration). Trend charts (`components/Chart.jsx`, hand-rolled SVG) for OVR over
+time, calories/day, water/day, sleep/night, steps/day. **OVR-over-time** reads `ovr_history`
+(phase9) — Home writes one snapshot per day when the drift runs; the chart shows a "filling in"
+placeholder until points accumulate. Everything else works from day one.
 
 ## Settings
 `src/pages/Settings.jsx` (`/settings`). Edit display **name** (stored in Supabase auth

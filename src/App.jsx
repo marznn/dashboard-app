@@ -10,6 +10,7 @@ import Water from './pages/Water.jsx'
 import Finance from './pages/Finance.jsx'
 import Calendar from './pages/Calendar.jsx'
 import Goals from './pages/Goals.jsx'
+import Progress from './pages/Progress.jsx'
 import Settings from './pages/Settings.jsx'
 import Home from './pages/Home.jsx'
 
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/finance" element={<Finance />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/goals" element={<Goals />} />
+            <Route path="/progress" element={<Progress />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Placeholder title="Not found" />} />
           </Routes>

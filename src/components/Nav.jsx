@@ -5,6 +5,7 @@ import { PulseMark } from './Logo.jsx'
 
 export const sections = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
+  { to: '/progress', label: 'Progress', icon: '📈' },
   { to: '/workout', label: 'Workout', icon: '🏋️' },
   { to: '/nutrition', label: 'Nutrition', icon: '🍎' },
   { to: '/sleep', label: 'Sleep', icon: '😴' },
