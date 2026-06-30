@@ -6,6 +6,7 @@ import Placeholder from './pages/Placeholder.jsx'
 import Workout from './pages/Workout.jsx'
 import Nutrition from './pages/Nutrition.jsx'
 import Sleep from './pages/Sleep.jsx'
+import Water from './pages/Water.jsx'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -30,7 +31,7 @@ export default function App() {
             <Route path="/workout" element={<Workout />} />
             <Route path="/nutrition" element={<Nutrition />} />
             <Route path="/sleep" element={<Sleep />} />
-            <Route path="/water" element={<Placeholder title="Water Intake" />} />
+            <Route path="/water" element={<Water />} />
             <Route path="/finance" element={<Placeholder title="Finance Tracker" />} />
             <Route path="/calendar" element={<Placeholder title="Calendar" />} />
             <Route path="/goals" element={<Placeholder title="Goals" />} />
