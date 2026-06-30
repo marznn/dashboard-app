@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { PulseMark } from '../components/Logo.jsx'
 
 export default function Login() {
   const [mode, setMode] = useState('login') // 'login' | 'signup'
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -17,7 +19,11 @@ export default function Login() {
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({ email, password })
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: name.trim() } },
+        })
         if (error) throw error
         setNotice('Account created. If email confirmation is on, check your inbox — otherwise you can log in now.')
         setMode('login')
@@ -36,11 +42,10 @@ export default function Login() {
     <div className="min-h-screen grid place-items-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl shadow-glow"
-            style={{ backgroundImage: 'linear-gradient(135deg, #0075FF 0%, #582CFF 100%)' }}>
-            ⚡
-          </span>
-          <h1 className="text-2xl font-extrabold tracking-tight text-gradient-brand">Life Tracker</h1>
+          <div className="mb-4 shadow-glow rounded-2xl">
+            <PulseMark size={60} />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gradient-brand">Pulse</h1>
           <p className="mt-1 text-sm text-slate-400">
             {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
           </p>
@@ -50,6 +55,20 @@ export default function Login() {
           onSubmit={handleSubmit}
           className="glass rounded-2xl p-6 space-y-4"
         >
+          {mode === 'signup' && (
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Name</label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500"
+                placeholder="Marston"
+              />
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
             <input

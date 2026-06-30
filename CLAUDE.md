@@ -1,7 +1,15 @@
-# Life Tracker — project guide
+# Pulse — project guide
 
-Personal life-tracker / dashboard. Multi-user, all real data in Supabase. Live at
-**dashboard-app-nine-bice.vercel.app**.
+Personal life-tracker / dashboard (product name **Pulse**). Multi-user, all real
+data in Supabase. Live at **dashboard-app-nine-bice.vercel.app**.
+
+UI is the **Vision UI Dashboard** aesthetic: deep navy/purple gradient background
+with drifting glow blobs (liquid-glass), frosted-glass cards (`.glass` utilities
+defined in `index.html`), brand palette (#0075FF blue / #582CFF purple / #21D4FD
+cyan), Plus Jakarta Sans. The Pulse logo (`src/components/Logo.jsx`) is a
+liquid-glass tile with an animated heartbeat; PWA/home-screen icons live in
+`public/` (icon.svg, app-icon.svg, icon-192/512.png, apple-touch-icon.png,
+manifest.webmanifest).
 
 ## Stack
 - **React 18 + Vite** SPA (no SSR). Plain JSX, no TypeScript.
@@ -22,9 +30,12 @@ src/lib/supabase.js     Supabase client (reads VITE_SUPABASE_URL / VITE_SUPABASE
 src/lib/nutrition.js    Calorie/macro target math (Mifflin-St Jeor, lean-mass protein)
 src/lib/ovr.js          OVR scoring engine + color tiers
 src/auth/               AuthProvider (session context) + Login (sign up / sign in)
-src/components/Nav.jsx  Sidebar (desktop), BottomNav (mobile, 5 items), MobileTopBar (hamburger drawer = all 8)
+src/components/Nav.jsx  Sidebar (desktop) + MobileTopBar (hamburger drawer = all sections + Settings).
+                        Bottom tab bar was removed — the drawer covers everything.
+src/components/Logo.jsx Pulse mark (liquid-glass tile + animated heartbeat) + wordmark
 src/components/ui.jsx   Shared primitives (Card, Button, Input, ProgressBar, date/format helpers)
-src/pages/              Home, Workout, Nutrition, Sleep, Water, Finance, Calendar, Goals
+src/pages/              Home, Workout, Nutrition, Sleep, Water, Finance, Calendar, Goals, Settings
+public/                 PWA icons + manifest (home-screen / favicon)
 supabase/               One SQL migration file per phase (run manually in Supabase SQL Editor)
 ```
 
@@ -35,7 +46,8 @@ supabase/               One SQL migration file per phase (run manually in Supaba
    exercises have ≥1 set that day.
 2. **Nutrition** — profile (height/weight/age/gender/**body fat %**, goal weight, goal body fat %,
    activity). Direction (cut/maintain/bulk) is **derived** from current vs goal weight (±2 lb dead-band).
-   Protein from lean body mass. Log meals vs targets.
+   Protein from lean body mass. Log meals vs targets. **Saved meals** (`saved_meals` table) are
+   reusable macro presets — save once, one-tap quick-add to any day.
 3. **Sleep** — bedtime/wake per night (past-midnight wrap handled), weekly average vs sleep goal.
 4. **Water** — daily oz goal, tap-to-add running total per day.
 5. **Finance** — monthly budget, income/expense by category, totals + remaining + breakdown.
@@ -44,14 +56,25 @@ supabase/               One SQL migration file per phase (run manually in Supaba
 7. **Goals** — title/detail/target date + 0–100% progress.
 8. **Home / OVR** — see below.
 
-## OVR (Overall Life Rating)
-`src/lib/ovr.js`. Score 0–99, weighted:
-workout 20 · nutrition 20 · sleep 15 · finance 15 · water 10 · goals 10 · calendar 10.
-- **Rolling last 7 days** for workout/nutrition/sleep/water consistency; finance = current month;
-  goals = current avg progress.
-- **Only active sections count.** A section not yet set up is excluded and weights renormalize
-  (an empty section never lowers the OVR).
+## OVR (Overall Life Rating) — persistent
+`src/lib/ovr.js`, persisted on `user_settings`. **Everyone starts at 50.** Each calendar day the
+dashboard is opened, the stored OVR drifts toward that day's *performance* via exponential
+smoothing (`driftOvr`, alpha 0.1) — good days raise it, bad days lower it. Nudged at most once per
+day (`user_settings.ovr_date` guards it); written to `user_settings.ovr`. **Home owns the daily
+persist** (in `load()`), so the score only moves while the user visits the dashboard.
+- **Performance** = weighted avg over categories that are BOTH enabled (Settings) AND active (set
+  up / logged), renormalized. Weights: workout 20 · nutrition 20 · sleep 15 · finance 15 · water 10
+  · goals 10 · calendar 10. Same rolling last-7-day windows as before.
+- **Category toggles** live on `user_settings.ovr_categories` (jsonb; key absent = on). Edited on
+  the **Settings** page; a category turned off never affects the OVR.
+- API: `computeCategories(bundle)` → per-category scores; `computePerformance(cats, enabledMap)` →
+  `{ perf99, contributing }`; `driftOvr(stored, perf99)` → next value; `isCategoryEnabled`.
 - Color tiers: 0–59 Bronze, 60–74 Silver, 75–84 Gold, 85–94 Diamond, 95–99 Elite.
+
+## Settings
+`src/pages/Settings.jsx` (`/settings`). Edit display **name** (stored in Supabase auth
+`user_metadata.full_name`, written via `supabase.auth.updateUser`; dashboard greets
+"{firstName}'s Dashboard"), toggle the 7 OVR categories on/off, and view the current OVR.
 
 ## Conventions
 - **Dates:** always stamp the **local** date on inserts via `todayStr()` (see `ui.jsx`). Do NOT rely

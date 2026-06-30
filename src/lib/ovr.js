@@ -1,13 +1,22 @@
 // Overall Life Rating (OVR) engine.
 //
-// Window: rolling last 7 days for the consistency categories.
-// Weighting: only "active" sections (ones you've set up / logged) are counted;
-// their weights are renormalized so OVR reflects what you actually use.
+// The OVR is a PERSISTENT score that starts at 50 for everyone. Each day you
+// open the app it drifts a little toward that day's "performance" — up on good
+// days, down on bad ones (see driftOvr below). It is stored on
+// user_settings.ovr and only nudged once per calendar day (user_settings.ovr_date).
+//
+// "Performance" is computed from a rolling 7-day window across the categories
+// you've enabled in Settings (user_settings.ovr_categories). A category only
+// counts when it is both enabled AND set up / logged; weights renormalize over
+// the contributing categories.
 
 import { computeTargets } from './nutrition.js'
 
 const clamp = (n) => Math.max(0, Math.min(1, n))
 const norm = (s) => (s ?? '').trim().toLowerCase()
+
+export const STARTING_OVR = 50
+const DRIFT_ALPHA = 0.1 // how fast the OVR moves toward a day's performance
 
 export const CATEGORY_WEIGHTS = {
   workout: 20,
@@ -17,6 +26,11 @@ export const CATEGORY_WEIGHTS = {
   water: 10,
   goals: 10,
   calendar: 10,
+}
+
+// A category contributes unless it was explicitly turned off in Settings.
+export function isCategoryEnabled(enabledMap, key) {
+  return enabledMap?.[key] !== false
 }
 
 // Was a planned session fully completed (or any set logged if no routine)?
@@ -35,9 +49,10 @@ function sumByDay(rows, field) {
   return map
 }
 
-// bundle: { last7Dates, workoutSettings, routines, sessions, sets, cardio,
-//   profile, meals, sleepLogs, userSettings, waterLogs, txns, goals, events }
-export function computeOvr(b) {
+// Per-category rolling scores. bundle: { last7Dates, workoutSettings, routines,
+//   sessions, sets, cardio, profile, meals, sleepLogs, userSettings, waterLogs,
+//   txns, goals, events }
+export function computeCategories(b) {
   const days = b.last7Dates // array of 7 YYYY-MM-DD strings
   const cats = []
 
@@ -137,13 +152,27 @@ export function computeOvr(b) {
     })
   }
 
-  const active = cats.filter((c) => c.active)
-  const totalW = active.reduce((a, c) => a + c.weight, 0)
-  const ovr = totalW > 0
-    ? Math.round((active.reduce((a, c) => a + c.weight * c.score, 0) / totalW) * 99)
-    : 0
+  return cats
+}
 
-  return { ovr, cats, hasData: totalW > 0 }
+// Today's performance (0–99) from the categories that are enabled AND active,
+// with weights renormalized over them. `contributing` is how many counted —
+// when 0 there is nothing to judge the day on, so no drift should be applied.
+export function computePerformance(cats, enabledMap) {
+  const contributing = cats.filter((c) => c.active && isCategoryEnabled(enabledMap, c.key))
+  const totalW = contributing.reduce((a, c) => a + c.weight, 0)
+  const perf99 = totalW > 0
+    ? Math.round((contributing.reduce((a, c) => a + c.weight * c.score, 0) / totalW) * 99)
+    : 0
+  return { perf99, contributing: contributing.length }
+}
+
+// Move the stored OVR a small step toward a day's performance (exponential
+// smoothing). Good days raise it, bad days lower it; the change is gradual.
+export function driftOvr(stored, perf99) {
+  const base = Number.isFinite(stored) ? stored : STARTING_OVR
+  const next = base + DRIFT_ALPHA * (perf99 - base)
+  return Math.round(Math.max(0, Math.min(99, next)))
 }
 
 // Color tiers: 0-59 bronze, 60-74 silver, 75-84 gold, 85-94 purple, 95-99 elite

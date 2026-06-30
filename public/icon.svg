@@ -1,0 +1,20 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0075FF"/>
+      <stop offset="55%" stop-color="#582CFF"/>
+      <stop offset="100%" stop-color="#21D4FD"/>
+    </linearGradient>
+    <linearGradient id="ps" x1="0" y1="0" x2="0" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="42%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="46" height="46" rx="13" fill="url(#pg)"/>
+  <rect x="1" y="1" width="46" height="46" rx="13" fill="url(#ps)"/>
+  <rect x="1.6" y="1.6" width="44.8" height="44.8" rx="12.4" fill="none" stroke="#ffffff" stroke-opacity="0.28"/>
+  <g stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 24 H16 L19.5 24 L23 12.5 L27 35.5 L30.5 21 L33.5 24 H43" stroke-opacity="0.4" stroke-width="4.2"/>
+    <path d="M5 24 H16 L19.5 24 L23 12.5 L27 35.5 L30.5 21 L33.5 24 H43" stroke-width="2.6"/>
+  </g>
+</svg>

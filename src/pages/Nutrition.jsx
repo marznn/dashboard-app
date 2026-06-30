@@ -10,19 +10,35 @@ export default function Nutrition() {
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState(null)
   const [meals, setMeals] = useState([])
+  const [saved, setSaved] = useState([])
 
   async function loadAll() {
     setLoading(true)
-    const [p, m] = await Promise.all([
+    const [p, m, s] = await Promise.all([
       supabase.from('nutrition_profile').select('*').maybeSingle(),
       supabase.from('meals').select('*').eq('date', today).order('created_at', { ascending: true }),
+      supabase.from('saved_meals').select('*').order('created_at', { ascending: false }),
     ])
     setProfile(p.data ?? null)
     setMeals(m.data ?? [])
+    setSaved(s.data ?? [])
     setLoading(false)
   }
 
   useEffect(() => { loadAll() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Add a saved preset to today's meals in one tap.
+  async function quickAddMeal(preset) {
+    await supabase.from('meals').insert({
+      date: todayStr(),
+      name: preset.name,
+      calories: preset.calories,
+      protein_g: Number(preset.protein_g) || 0,
+      carbs_g: Number(preset.carbs_g) || 0,
+      fat_g: Number(preset.fat_g) || 0,
+    })
+    loadAll()
+  }
 
   if (loading) return <Empty>Loading…</Empty>
 
@@ -44,7 +60,10 @@ export default function Nutrition() {
         <ProfileCard profile={profile} reload={loadAll} />
         <TargetsCard targets={targets} totals={totals} hasProfile={!!profile} />
         <div className="lg:col-span-2">
-          <MealsCard meals={meals} reload={loadAll} />
+          <MealsCard meals={meals} saved={saved} reload={loadAll} onQuickAdd={quickAddMeal} />
+        </div>
+        <div className="lg:col-span-2">
+          <SavedMealsCard saved={saved} reload={loadAll} onQuickAdd={quickAddMeal} />
         </div>
       </div>
     </div>
@@ -178,7 +197,7 @@ function TargetsCard({ targets, totals, hasProfile }) {
   )
 }
 
-function MealsCard({ meals, reload }) {
+function MealsCard({ meals, saved, reload, onQuickAdd }) {
   const [form, setForm] = useState({ name: '', calories: '', protein_g: '', carbs_g: '', fat_g: '' })
   const [busy, setBusy] = useState(false)
 
@@ -201,6 +220,25 @@ function MealsCard({ meals, reload }) {
   return (
     <Card>
       <SectionTitle right={<span className="text-xs text-slate-500">Today</span>}>Log a meal</SectionTitle>
+
+      {saved.length > 0 && (
+        <div className="mb-3">
+          <p className="text-xs text-slate-500 mb-1.5">Quick add</p>
+          <div className="flex flex-wrap gap-1.5">
+            {saved.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onQuickAdd(s)}
+                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-200 transition-colors hover:bg-white/10 hover:border-brand/40"
+                title={`${s.calories} cal · ${Number(s.protein_g)}p / ${Number(s.carbs_g)}c / ${Number(s.fat_g)}f`}
+              >
+                + {s.name} <span className="text-slate-500">{s.calories}cal</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-end">
         <div className="col-span-2"><Field label="Meal"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Chicken & rice" /></Field></div>
         <Field label="Calories"><Input type="number" min="0" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="600" /></Field>
@@ -220,6 +258,63 @@ function MealsCard({ meals, reload }) {
                 {m.calories} cal · {Number(m.protein_g)}p / {Number(m.carbs_g)}c / {Number(m.fat_g)}f
               </span>
               <button onClick={async () => { await supabase.from('meals').delete().eq('id', m.id); reload() }}
+                className="text-xs text-red-400 hover:underline">Delete</button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  )
+}
+
+function SavedMealsCard({ saved, reload, onQuickAdd }) {
+  const [form, setForm] = useState({ name: '', calories: '', protein_g: '', carbs_g: '', fat_g: '' })
+  const [busy, setBusy] = useState(false)
+
+  async function savePreset() {
+    if (!form.name || form.calories === '') return
+    setBusy(true)
+    await supabase.from('saved_meals').insert({
+      name: form.name,
+      calories: Number(form.calories),
+      protein_g: Number(form.protein_g) || 0,
+      carbs_g: Number(form.carbs_g) || 0,
+      fat_g: Number(form.fat_g) || 0,
+    })
+    setForm({ name: '', calories: '', protein_g: '', carbs_g: '', fat_g: '' })
+    setBusy(false)
+    reload()
+  }
+
+  return (
+    <Card>
+      <SectionTitle right={<span className="text-xs text-slate-500">Reusable presets</span>}>Saved meals</SectionTitle>
+      <p className="text-xs text-slate-500 mb-3">
+        Save a meal’s macros once, then add it to any day in a single tap (e.g. “Salmon — 500 cal, 50p / 0c / 10f”).
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-end">
+        <div className="col-span-2"><Field label="Meal"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Salmon" /></Field></div>
+        <Field label="Calories"><Input type="number" min="0" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="500" /></Field>
+        <Field label="Protein (g)"><Input type="number" min="0" value={form.protein_g} onChange={(e) => setForm({ ...form, protein_g: e.target.value })} placeholder="50" /></Field>
+        <Field label="Carbs (g)"><Input type="number" min="0" value={form.carbs_g} onChange={(e) => setForm({ ...form, carbs_g: e.target.value })} placeholder="0" /></Field>
+        <Field label="Fat (g)"><Input type="number" min="0" value={form.fat_g} onChange={(e) => setForm({ ...form, fat_g: e.target.value })} placeholder="10" /></Field>
+      </div>
+      <div className="mt-3"><Button onClick={savePreset} disabled={busy}>Save preset</Button></div>
+
+      <ul className="mt-4 space-y-1.5">
+        {saved.length === 0 && <Empty>No saved meals yet.</Empty>}
+        {saved.map((s) => (
+          <li key={s.id} className="flex items-center justify-between gap-2 text-sm">
+            <span className="min-w-0">
+              <span className="text-slate-200">{s.name}</span>
+              <span className="ml-2 text-xs text-slate-500">
+                {s.calories} cal · {Number(s.protein_g)}p / {Number(s.carbs_g)}c / {Number(s.fat_g)}f
+              </span>
+            </span>
+            <span className="flex items-center gap-3 shrink-0">
+              <button onClick={() => onQuickAdd(s)} className="text-xs font-semibold text-brand-cyan hover:underline">+ Add to today</button>
+              <button onClick={async () => { await supabase.from('saved_meals').delete().eq('id', s.id); reload() }}
                 className="text-xs text-red-400 hover:underline">Delete</button>
             </span>
           </li>

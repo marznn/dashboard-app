@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
-import { computeOvr, ovrTier } from '../lib/ovr.js'
+import { useAuth } from '../auth/AuthProvider.jsx'
+import {
+  computeCategories, computePerformance, driftOvr, ovrTier, isCategoryEnabled, STARTING_OVR,
+} from '../lib/ovr.js'
 import { computeTargets } from '../lib/nutrition.js'
 import {
   PageHeader, Card, SectionTitle, Empty, ProgressBar,
@@ -9,9 +12,14 @@ import {
 } from '../components/ui.jsx'
 
 export default function Home() {
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [bundle, setBundle] = useState(null)
   const [upcoming, setUpcoming] = useState([])
+  const [ovr, setOvr] = useState(STARTING_OVR)
+
+  const firstName = (user?.user_metadata?.full_name || user?.user_metadata?.name || '').trim().split(/\s+/)[0]
+  const dashTitle = firstName ? `${firstName}'s Dashboard` : 'Your Dashboard'
 
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -51,7 +59,7 @@ export default function Home() {
       sets = data ?? []
     }
 
-    setBundle({
+    const bundleObj = {
       last7Dates,
       workoutSettings: workoutSettings.data,
       routines: routines.data ?? [],
@@ -66,23 +74,42 @@ export default function Home() {
       txns: txns.data ?? [],
       goals: goals.data ?? [],
       events: events.data ?? [],
-    })
+    }
+
+    // Persistent OVR: start at 50, drift once per day toward today's performance.
+    const settings = userSettings.data
+    const enabledMap = settings?.ovr_categories ?? {}
+    const storedOvr = settings?.ovr ?? STARTING_OVR
+    const cats = computeCategories(bundleObj)
+    const { perf99, contributing } = computePerformance(cats, enabledMap)
+    let displayOvr = storedOvr
+    if (contributing > 0 && settings?.ovr_date !== today) {
+      displayOvr = driftOvr(storedOvr, perf99)
+      await supabase.from('user_settings').upsert(
+        { ovr: displayOvr, ovr_date: today, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' },
+      )
+    }
+
+    setOvr(displayOvr)
+    setBundle(bundleObj)
     setUpcoming(upcomingEvents.data ?? [])
     setLoading(false)
   }
 
   if (loading) return <Empty>Loading your dashboard…</Empty>
 
-  const { ovr, cats, hasData } = computeOvr(bundle)
+  const cats = computeCategories(bundle)
+  const enabledMap = bundle.userSettings?.ovr_categories ?? {}
 
   return (
     <div>
       <PageHeader
-        title="Dashboard"
+        title={dashTitle}
         subtitle={new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
       />
 
-      <OvrCard ovr={ovr} cats={cats} hasData={hasData} />
+      <OvrCard ovr={ovr} cats={cats} enabledMap={enabledMap} />
 
       <div className="mt-6">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400 mb-3">This week at a glance</h2>
@@ -96,8 +123,9 @@ export default function Home() {
   )
 }
 
-function OvrCard({ ovr, cats, hasData }) {
+function OvrCard({ ovr, cats, enabledMap }) {
   const tier = ovrTier(ovr)
+  const anyContributing = cats.some((c) => c.active && isCategoryEnabled(enabledMap, c.key))
   return (
     <div className={`relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br ${tier.from} ${tier.to} p-5 sm:p-6 backdrop-blur-xl shadow-card`}>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),transparent_30%)]" />
@@ -106,7 +134,7 @@ function OvrCard({ ovr, cats, hasData }) {
         <div className={`relative grid place-items-center rounded-2xl bg-slate-950/50 backdrop-blur-md ring-2 ${tier.ring} px-8 py-6 text-center`}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">OVR</p>
           <p className={`font-extrabold leading-none ${tier.text}`} style={{ fontSize: '4.5rem' }}>
-            {hasData ? ovr : '—'}
+            {ovr}
           </p>
           <p className={`mt-1 text-sm font-bold uppercase tracking-wider ${tier.text}`}>{tier.name}</p>
           <p className="mt-1 text-[11px] text-slate-500">Overall Life Rating</p>
@@ -114,24 +142,31 @@ function OvrCard({ ovr, cats, hasData }) {
 
         {/* Category breakdown */}
         <div className="space-y-2.5">
-          {!hasData && (
-            <p className="text-sm text-slate-300">Start logging in any section to build your OVR. Inactive sections don't count against you.</p>
+          {!anyContributing && (
+            <p className="text-sm text-slate-300">
+              Everyone starts at 50. Start logging in your enabled sections and your OVR will climb — slack off and it slides.
+              Pick which categories count in <Link to="/settings" className="text-brand-cyan hover:underline">Settings</Link>.
+            </p>
           )}
-          {cats.map((c) => (
-            <div key={c.key} className={c.active ? '' : 'opacity-40'}>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-slate-300">
-                  {c.label} <span className="text-slate-600">· {c.weight}%</span>
-                </span>
-                <span className="text-slate-400">
-                  {c.active ? `${Math.round(c.score * 99)} · ${c.detail}` : 'not started'}
-                </span>
+          {cats.map((c) => {
+            const enabled = isCategoryEnabled(enabledMap, c.key)
+            const contributing = enabled && c.active
+            return (
+              <div key={c.key} className={contributing ? '' : 'opacity-40'}>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-300">
+                    {c.label} <span className="text-slate-600">· {c.weight}%</span>
+                  </span>
+                  <span className="text-slate-400">
+                    {!enabled ? 'off' : c.active ? `${Math.round(c.score * 99)} · ${c.detail}` : 'not started'}
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div className={`h-full rounded-full ${tier.bar}`} style={{ width: `${contributing ? Math.round(c.score * 100) : 0}%` }} />
+                </div>
               </div>
-              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                <div className={`h-full rounded-full ${tier.bar}`} style={{ width: `${c.active ? Math.round(c.score * 100) : 0}%` }} />
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
