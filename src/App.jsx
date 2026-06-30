@@ -4,6 +4,7 @@ import Login from './auth/Login.jsx'
 import { Sidebar, BottomNav } from './components/Nav.jsx'
 import Placeholder from './pages/Placeholder.jsx'
 import Workout from './pages/Workout.jsx'
+import Nutrition from './pages/Nutrition.jsx'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -26,7 +27,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Placeholder title="Home — OVR & Weekly Review" />} />
             <Route path="/workout" element={<Workout />} />
-            <Route path="/nutrition" element={<Placeholder title="Nutrition Tracker" />} />
+            <Route path="/nutrition" element={<Nutrition />} />
             <Route path="/sleep" element={<Placeholder title="Sleep Tracker" />} />
             <Route path="/water" element={<Placeholder title="Water Intake" />} />
             <Route path="/finance" element={<Placeholder title="Finance Tracker" />} />

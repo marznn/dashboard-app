@@ -76,6 +76,23 @@ export function Empty({ children }) {
   return <p className="text-sm text-slate-500 py-2">{children}</p>
 }
 
+export function ProgressBar({ value, max, label, unit = '', color = 'bg-indigo-500' }) {
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
+  return (
+    <div>
+      <div className="flex items-center justify-between text-sm mb-1">
+        <span className="text-slate-300">{label}</span>
+        <span className="text-slate-400">
+          {Math.round(value)}{unit} <span className="text-slate-600">/ {Math.round(max)}{unit}</span>
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
+
 // Local YYYY-MM-DD (avoids UTC off-by-one from toISOString)
 export function todayStr() {
   const d = new Date()
