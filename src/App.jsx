@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { useAuth } from './auth/AuthProvider.jsx'
 import Login from './auth/Login.jsx'
-import { Sidebar, BottomNav } from './components/Nav.jsx'
+import { Sidebar, BottomNav, MobileTopBar } from './components/Nav.jsx'
 import Placeholder from './pages/Placeholder.jsx'
 import Workout from './pages/Workout.jsx'
 import Nutrition from './pages/Nutrition.jsx'
@@ -28,7 +28,8 @@ export default function App() {
   return (
     <div className="min-h-screen">
       <Sidebar />
-      <main className="md:pl-60">
+      <MobileTopBar />
+      <main className="md:pl-60 pt-14 md:pt-0">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
           <Routes>
             <Route path="/" element={<Home />} />
