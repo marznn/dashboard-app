@@ -105,6 +105,7 @@ function CardioCard({ cardio, reload }) {
     if (!activity || !duration) return
     setBusy(true)
     await supabase.from('cardio_logs').insert({
+      date: todayStr(),
       activity,
       duration_min: Number(duration),
       distance_mi: distance ? Number(distance) : null,
