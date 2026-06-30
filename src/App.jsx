@@ -3,6 +3,7 @@ import { useAuth } from './auth/AuthProvider.jsx'
 import Login from './auth/Login.jsx'
 import { Sidebar, BottomNav } from './components/Nav.jsx'
 import Placeholder from './pages/Placeholder.jsx'
+import Workout from './pages/Workout.jsx'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -24,7 +25,7 @@ export default function App() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
           <Routes>
             <Route path="/" element={<Placeholder title="Home — OVR & Weekly Review" />} />
-            <Route path="/workout" element={<Placeholder title="Workout Tracker" />} />
+            <Route path="/workout" element={<Workout />} />
             <Route path="/nutrition" element={<Placeholder title="Nutrition Tracker" />} />
             <Route path="/sleep" element={<Placeholder title="Sleep Tracker" />} />
             <Route path="/water" element={<Placeholder title="Water Intake" />} />
