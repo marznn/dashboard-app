@@ -94,8 +94,19 @@ export function ProgressBar({ value, max, label, unit = '', color = 'bg-indigo-5
 }
 
 // Local YYYY-MM-DD (avoids UTC off-by-one from toISOString)
-export function todayStr() {
-  const d = new Date()
+function localDateStr(d) {
   const off = d.getTimezoneOffset()
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10)
+}
+
+export function todayStr() {
+  return localDateStr(new Date())
+}
+
+// Monday of the current week, as YYYY-MM-DD
+export function weekStartStr() {
+  const d = new Date()
+  const offsetToMonday = (d.getDay() + 6) % 7 // Sun=0 -> 6, Mon=1 -> 0
+  d.setDate(d.getDate() - offsetToMonday)
+  return localDateStr(d)
 }

@@ -1,28 +1,35 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import {
-  PageHeader, Card, SectionTitle, Button, Field, Input, Select, Empty, todayStr,
+  PageHeader, Card, SectionTitle, Button, Field, Input, Select, Empty, ProgressBar,
+  todayStr, weekStartStr,
 } from '../components/ui.jsx'
+
+const norm = (s) => (s ?? '').trim().toLowerCase()
 
 export default function Workout() {
   const today = todayStr()
+  const weekStart = weekStartStr()
   const [loading, setLoading] = useState(true)
   const [routines, setRoutines] = useState([])
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState(null) // { id, routine_id }
   const [sets, setSets] = useState([])
   const [cardio, setCardio] = useState([])
   const [steps, setSteps] = useState('')
+  const [settings, setSettings] = useState(null)
 
   async function loadAll() {
     setLoading(true)
-    const [r, ss, st] = await Promise.all([
+    const [r, ss, st, cg] = await Promise.all([
       supabase.from('routines').select('*').order('created_at', { ascending: false }),
-      supabase.from('workout_sessions').select('id').eq('date', today).maybeSingle(),
+      supabase.from('workout_sessions').select('id, routine_id').eq('date', today).maybeSingle(),
       supabase.from('step_logs').select('steps').eq('date', today).maybeSingle(),
+      supabase.from('workout_settings').select('*').maybeSingle(),
     ])
     setRoutines(r.data ?? [])
     setSession(ss.data ?? null)
     setSteps(st.data ? String(st.data.steps) : '')
+    setSettings(cg.data ?? { cardio_weekly_goal_min: 150 })
 
     if (ss.data) {
       const { data: setRows } = await supabase
@@ -34,7 +41,7 @@ export default function Workout() {
     }
 
     const { data: cardioRows } = await supabase
-      .from('cardio_logs').select('*').order('date', { ascending: false }).limit(10)
+      .from('cardio_logs').select('*').gte('date', weekStart).order('date', { ascending: false })
     setCardio(cardioRows ?? [])
     setLoading(false)
   }
@@ -44,28 +51,124 @@ export default function Workout() {
   async function ensureSession() {
     if (session) return session.id
     const { data } = await supabase
-      .from('workout_sessions').insert({ date: today }).select('id').single()
+      .from('workout_sessions').insert({ date: today }).select('id, routine_id').single()
     setSession(data)
     return data.id
   }
 
+  async function setTodayRoutine(routineId) {
+    const id = await ensureSession()
+    await supabase.from('workout_sessions').update({ routine_id: routineId || null }).eq('id', id)
+    setSession((s) => ({ ...s, routine_id: routineId || null }))
+  }
+
   if (loading) return <Empty>Loading…</Empty>
+
+  const selectedRoutine = routines.find((r) => r.id === session?.routine_id) ?? null
+  const routineExercises = selectedRoutine?.exercises ?? []
+  const completed = routineExercises.filter((ex) => sets.some((s) => norm(s.exercise) === norm(ex)))
+  const weekCardioMin = cardio.reduce((a, c) => a + (c.duration_min || 0), 0)
+  const cardioGoal = settings?.cardio_weekly_goal_min ?? 150
 
   return (
     <div>
-      <PageHeader title="Workout" subtitle="Routines, sets & reps, cardio, and daily steps." />
+      <PageHeader title="Workout" subtitle="Plan, log, and track today's progress." />
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <StepsCard today={today} steps={steps} setSteps={setSteps} />
-        <CardioCard cardio={cardio} reload={loadAll} />
+        <ProgressCard
+          routines={routines}
+          selectedRoutine={selectedRoutine}
+          completedCount={completed.length}
+          totalCount={routineExercises.length}
+          weekCardioMin={weekCardioMin}
+          cardioGoal={cardioGoal}
+          onPickRoutine={setTodayRoutine}
+          onSaveCardioGoal={async (min) => {
+            await supabase.from('workout_settings').upsert(
+              { cardio_weekly_goal_min: min, updated_at: new Date().toISOString() },
+              { onConflict: 'user_id' },
+            )
+            setSettings((s) => ({ ...s, cardio_weekly_goal_min: min }))
+          }}
+        />
+        <StepsCard steps={steps} setSteps={setSteps} />
+
         <div className="lg:col-span-2">
-          <LogCard routines={routines} sets={sets} ensureSession={ensureSession} reload={loadAll} />
+          <LogCard
+            selectedRoutine={selectedRoutine}
+            completed={completed}
+            sets={sets}
+            ensureSession={ensureSession}
+            reload={loadAll}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <CardioCard cardio={cardio} reload={loadAll} />
         </div>
         <div className="lg:col-span-2">
           <RoutinesCard routines={routines} reload={loadAll} />
         </div>
       </div>
     </div>
+  )
+}
+
+function ProgressCard({
+  routines, selectedRoutine, completedCount, totalCount,
+  weekCardioMin, cardioGoal, onPickRoutine, onSaveCardioGoal,
+}) {
+  const [goalInput, setGoalInput] = useState(String(cardioGoal))
+  const [savingGoal, setSavingGoal] = useState(false)
+
+  return (
+    <Card>
+      <SectionTitle right={<span className="text-xs text-slate-500">Today</span>}>Progress</SectionTitle>
+
+      <Field label="Today's routine">
+        <Select value={selectedRoutine?.id ?? ''} onChange={(e) => onPickRoutine(e.target.value)}>
+          <option value="">— pick a routine —</option>
+          {routines.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+        </Select>
+      </Field>
+
+      <div className="mt-4 space-y-4">
+        {selectedRoutine ? (
+          <ProgressBar
+            label={`${selectedRoutine.name} completion`}
+            value={completedCount} max={totalCount || 1}
+            unit={` / ${totalCount} ex`} color="bg-emerald-500"
+          />
+        ) : (
+          <Empty>Pick a routine to track today's workout completion.</Empty>
+        )}
+
+        <div>
+          <ProgressBar
+            label="Cardio this week" unit=" min"
+            value={weekCardioMin} max={cardioGoal} color="bg-sky-500"
+          />
+          <div className="mt-2 flex items-end gap-2">
+            <Field label="Weekly cardio goal (min)">
+              <Input
+                type="number" min="0" value={goalInput}
+                onChange={(e) => setGoalInput(e.target.value)} className="w-32"
+              />
+            </Field>
+            <Button
+              variant="ghost"
+              disabled={savingGoal}
+              onClick={async () => {
+                setSavingGoal(true)
+                await onSaveCardioGoal(Number(goalInput) || 0)
+                setSavingGoal(false)
+              }}
+            >
+              Save goal
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
   )
 }
 
@@ -117,7 +220,7 @@ function CardioCard({ cardio, reload }) {
 
   return (
     <Card>
-      <SectionTitle>Cardio</SectionTitle>
+      <SectionTitle right={<span className="text-xs text-slate-500">This week</span>}>Cardio</SectionTitle>
       <div className="grid grid-cols-2 gap-2">
         <Field label="Activity"><Input value={activity} onChange={(e) => setActivity(e.target.value)} placeholder="Run" /></Field>
         <Field label="Minutes"><Input type="number" min="0" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="30" /></Field>
@@ -125,7 +228,7 @@ function CardioCard({ cardio, reload }) {
         <div className="flex items-end"><Button onClick={add} disabled={busy} className="w-full">Add cardio</Button></div>
       </div>
       <ul className="mt-4 space-y-1.5">
-        {cardio.length === 0 && <Empty>No cardio logged yet.</Empty>}
+        {cardio.length === 0 && <Empty>No cardio logged this week.</Empty>}
         {cardio.map((c) => (
           <li key={c.id} className="flex items-center justify-between text-sm">
             <span className="text-slate-200">
@@ -143,15 +246,14 @@ function CardioCard({ cardio, reload }) {
   )
 }
 
-function LogCard({ routines, sets, ensureSession, reload }) {
+function LogCard({ selectedRoutine, completed, sets, ensureSession, reload }) {
   const [exercise, setExercise] = useState('')
   const [reps, setReps] = useState('')
   const [weight, setWeight] = useState('')
-  const [routineId, setRoutineId] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const selectedRoutine = routines.find((r) => r.id === routineId)
   const chips = selectedRoutine?.exercises ?? []
+  const completedSet = new Set(completed.map((e) => e.trim().toLowerCase()))
 
   async function addSet() {
     if (!exercise || reps === '') return
@@ -168,7 +270,6 @@ function LogCard({ routines, sets, ensureSession, reload }) {
     reload()
   }
 
-  // Group today's sets by exercise
   const grouped = sets.reduce((acc, s) => {
     (acc[s.exercise] ??= []).push(s)
     return acc
@@ -178,24 +279,21 @@ function LogCard({ routines, sets, ensureSession, reload }) {
     <Card>
       <SectionTitle right={<span className="text-xs text-slate-500">Today</span>}>Log sets & reps</SectionTitle>
 
-      {routines.length > 0 && (
-        <div className="mb-3">
-          <Field label="Load exercises from routine">
-            <Select value={routineId} onChange={(e) => setRoutineId(e.target.value)}>
-              <option value="">— none —</option>
-              {routines.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </Select>
-          </Field>
-          {chips.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {chips.map((name) => (
-                <button key={name} onClick={() => setExercise(name)}
-                  className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300 hover:bg-white/10">
-                  {name}
-                </button>
-              ))}
-            </div>
-          )}
+      {chips.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {chips.map((name) => {
+            const done = completedSet.has(name.trim().toLowerCase())
+            return (
+              <button key={name} onClick={() => setExercise(name)}
+                className={`rounded-full px-2.5 py-1 text-xs border transition-colors ${
+                  done
+                    ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                    : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+                }`}>
+                {done ? '✓ ' : ''}{name}
+              </button>
+            )
+          })}
         </div>
       )}
 
