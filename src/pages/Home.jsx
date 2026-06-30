@@ -99,10 +99,11 @@ export default function Home() {
 function OvrCard({ ovr, cats, hasData }) {
   const tier = ovrTier(ovr)
   return (
-    <div className={`rounded-3xl border border-white/10 bg-gradient-to-br ${tier.from} ${tier.to} p-5 sm:p-6`}>
-      <div className="grid gap-6 md:grid-cols-[auto,1fr] items-center">
+    <div className={`relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br ${tier.from} ${tier.to} p-5 sm:p-6 backdrop-blur-xl shadow-card`}>
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),transparent_30%)]" />
+      <div className="relative grid gap-6 md:grid-cols-[auto,1fr] items-center">
         {/* Athlete-card style score */}
-        <div className={`relative grid place-items-center rounded-2xl bg-slate-950/60 ring-2 ${tier.ring} px-8 py-6 text-center`}>
+        <div className={`relative grid place-items-center rounded-2xl bg-slate-950/50 backdrop-blur-md ring-2 ${tier.ring} px-8 py-6 text-center`}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">OVR</p>
           <p className={`font-extrabold leading-none ${tier.text}`} style={{ fontSize: '4.5rem' }}>
             {hasData ? ovr : '—'}
@@ -181,9 +182,9 @@ function WeeklyReview({ bundle }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
       {items.map((it) => (
-        <Link key={it.label} to={it.to}>
-          <Card className="hover:bg-slate-900/80 transition-colors">
-            <p className="text-xs text-slate-400">{it.label}</p>
+        <Link key={it.label} to={it.to} className="block h-full">
+          <Card className="glass-hover h-full">
+            <p className="text-xs font-medium text-slate-400">{it.label}</p>
             <p className="mt-1 text-xl font-extrabold text-white">{it.value}</p>
             <p className="text-[11px] text-slate-500">{it.sub}</p>
           </Card>
@@ -196,7 +197,7 @@ function WeeklyReview({ bundle }) {
 function UpcomingCard({ events }) {
   return (
     <Card>
-      <SectionTitle right={<Link to="/calendar" className="text-xs text-indigo-400 hover:underline">Calendar</Link>}>
+      <SectionTitle right={<Link to="/calendar" className="text-xs text-brand-cyan hover:underline">Calendar</Link>}>
         Upcoming events
       </SectionTitle>
       <ul className="space-y-1.5">

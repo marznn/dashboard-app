@@ -4,7 +4,7 @@ export function PageHeader({ title, subtitle, right }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-white">{title}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-gradient-brand">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}
       </div>
       {right}
@@ -14,7 +14,7 @@ export function PageHeader({ title, subtitle, right }) {
 
 export function Card({ children, className = '' }) {
   return (
-    <div className={`rounded-2xl border border-white/10 bg-slate-900/60 p-5 ${className}`}>
+    <div className={`glass rounded-2xl p-5 ${className}`}>
       {children}
     </div>
   )
@@ -31,13 +31,13 @@ export function SectionTitle({ children, right }) {
 
 export function Button({ children, variant = 'primary', className = '', ...props }) {
   const variants = {
-    primary: 'bg-indigo-500 text-white hover:bg-indigo-600',
-    ghost: 'border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10',
+    primary: 'btn-brand text-white',
+    ghost: 'glass-soft text-slate-200',
     danger: 'text-red-400 hover:bg-red-500/10',
   }
   return (
     <button
-      className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}
@@ -58,7 +58,7 @@ export function Input(props) {
   return (
     <input
       {...props}
-      className={`w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 ${props.className ?? ''}`}
+      className={`glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 ${props.className ?? ''}`}
     />
   )
 }
@@ -67,7 +67,7 @@ export function Select(props) {
   return (
     <select
       {...props}
-      className={`w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500 ${props.className ?? ''}`}
+      className={`glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none ${props.className ?? ''}`}
     />
   )
 }
@@ -76,18 +76,32 @@ export function Empty({ children }) {
   return <p className="text-sm text-slate-500 py-2">{children}</p>
 }
 
+// Map the legacy semantic bg-* colors to Vision UI gradient fills.
+const GRADIENT_FILL = {
+  'bg-indigo-500': 'grad-blue',
+  'bg-emerald-500': 'grad-green',
+  'bg-amber-500': 'grad-amber',
+  'bg-sky-500': 'grad-sky',
+  'bg-violet-500': 'grad-violet',
+  'bg-red-500': 'grad-red',
+}
+
 export function ProgressBar({ value, max, label, unit = '', color = 'bg-indigo-500' }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
+  const fill = GRADIENT_FILL[color] ?? 'grad-blue'
   return (
     <div>
-      <div className="flex items-center justify-between text-sm mb-1">
+      <div className="flex items-center justify-between text-sm mb-1.5">
         <span className="text-slate-300">{label}</span>
         <span className="text-slate-400">
           {Math.round(value)}{unit} <span className="text-slate-600">/ {Math.round(max)}{unit}</span>
         </span>
       </div>
-      <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden ring-1 ring-inset ring-white/5">
+        <div
+          className={`h-full rounded-full ${fill} transition-[width] duration-500 ease-out`}
+          style={{ width: `${pct}%`, boxShadow: pct > 0 ? '0 0 12px rgba(33,150,255,0.45)' : 'none' }}
+        />
       </div>
     </div>
   )

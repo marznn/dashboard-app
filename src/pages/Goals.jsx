@@ -112,7 +112,7 @@ function GoalCard({ goal, reload }) {
           onChange={(e) => setProgress(Number(e.target.value))}
           onPointerUp={(e) => save(Number(e.target.value))}
           onKeyUp={(e) => save(Number(e.target.value))}
-          className="mt-2 w-full accent-indigo-500"
+          className="mt-2 w-full accent-brand"
         />
         <div className="flex gap-2 mt-1">
           <Button variant="ghost" onClick={() => save(Math.max(0, progress - 10))}>−10%</Button>

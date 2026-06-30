@@ -35,8 +35,12 @@ export default function Login() {
   return (
     <div className="min-h-screen grid place-items-center px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-extrabold tracking-tight">Life Tracker</h1>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl shadow-glow"
+            style={{ backgroundImage: 'linear-gradient(135deg, #0075FF 0%, #582CFF 100%)' }}>
+            ⚡
+          </span>
+          <h1 className="text-2xl font-extrabold tracking-tight text-gradient-brand">Life Tracker</h1>
           <p className="mt-1 text-sm text-slate-400">
             {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
           </p>
@@ -44,7 +48,7 @@ export default function Login() {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 space-y-4"
+          className="glass rounded-2xl p-6 space-y-4"
         >
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
@@ -53,7 +57,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500"
+              className="glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500"
               placeholder="you@example.com"
             />
           </div>
@@ -66,7 +70,7 @@ export default function Login() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500"
+              className="glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500"
               placeholder="••••••••"
             />
           </div>
@@ -77,7 +81,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-lg bg-indigo-500 px-3 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 transition-colors disabled:opacity-50"
+            className="btn-brand w-full rounded-xl px-3 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
           >
             {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>

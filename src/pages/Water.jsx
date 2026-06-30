@@ -53,9 +53,9 @@ export default function Water() {
         <Card>
           <SectionTitle right={<span className="text-xs text-slate-500">Today</span>}>Intake</SectionTitle>
           <div className="flex items-end gap-2 mb-1">
-            <span className="text-4xl font-extrabold text-white">{oz}</span>
+            <span className="text-4xl font-extrabold text-gradient-brand">{oz}</span>
             <span className="text-slate-400 mb-1">/ {goal} oz</span>
-            <span className="ml-auto text-sm text-sky-400 font-semibold">{pct}%</span>
+            <span className="ml-auto text-sm text-brand-cyan font-semibold">{pct}%</span>
           </div>
           <ProgressBar label="Progress" unit=" oz" value={oz} max={goal} color="bg-sky-500" />
 

@@ -75,7 +75,7 @@ export default function Finance() {
 
 function Stat({ label, value, color }) {
   return (
-    <Card>
+    <Card className="glass-hover">
       <p className="text-sm text-slate-400">{label}</p>
       <p className={`mt-1 text-2xl font-extrabold ${color}`}>{value}</p>
     </Card>

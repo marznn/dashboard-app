@@ -17,7 +17,12 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen grid place-items-center text-slate-500 text-sm">Loading…</div>
+      <div className="min-h-screen grid place-items-center">
+        <div className="flex flex-col items-center gap-3">
+          <span className="h-9 w-9 animate-spin rounded-full border-2 border-white/15 border-t-brand-cyan" />
+          <span className="text-slate-400 text-sm">Loading…</span>
+        </div>
+      </div>
     )
   }
 
@@ -29,8 +34,8 @@ export default function App() {
     <div className="min-h-screen">
       <Sidebar />
       <MobileTopBar />
-      <main className="md:pl-60 pt-14 md:pt-0">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+      <main className="md:pl-72 pt-14 md:pt-0">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/workout" element={<Workout />} />

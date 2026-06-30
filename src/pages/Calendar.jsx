@@ -97,15 +97,15 @@ export default function Calendar() {
                   <button
                     key={dateStr}
                     onClick={() => setSelected(dateStr)}
-                    className={`aspect-square rounded-lg border p-1 text-left transition-colors ${
-                      isSelected ? 'border-indigo-500 bg-indigo-500/15'
+                    className={`aspect-square rounded-xl border p-1 text-left transition-colors ${
+                      isSelected ? 'border-brand bg-brand/15 shadow-glow'
                         : 'border-white/10 hover:bg-white/5'
                     }`}
                   >
-                    <span className={`text-xs ${isToday ? 'font-bold text-indigo-400' : 'text-slate-300'}`}>{d}</span>
+                    <span className={`text-xs ${isToday ? 'font-bold text-brand-cyan' : 'text-slate-300'}`}>{d}</span>
                     <div className="mt-0.5 space-y-0.5">
                       {dayEvents.slice(0, 2).map((e) => (
-                        <div key={e.id} className={`truncate rounded px-1 text-[10px] ${e.done ? 'bg-white/5 text-slate-500 line-through' : 'bg-indigo-500/25 text-indigo-200'}`}>
+                        <div key={e.id} className={`truncate rounded px-1 text-[10px] ${e.done ? 'bg-white/5 text-slate-500 line-through' : 'bg-brand/25 text-brand-cyan'}`}>
                           {e.title}
                         </div>
                       ))}
@@ -173,7 +173,7 @@ function DayPanel({ selected, events, reload }) {
         {events.map((e) => (
           <li key={e.id} className="flex items-center justify-between gap-2 text-sm">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={e.done} onChange={() => toggleDone(e)} className="accent-indigo-500" />
+              <input type="checkbox" checked={e.done} onChange={() => toggleDone(e)} className="accent-brand h-4 w-4" />
               <span className={e.done ? 'text-slate-500 line-through' : 'text-slate-200'}>
                 {e.time ? `${e.time} · ` : ''}{e.title}
               </span>

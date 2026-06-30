@@ -333,7 +333,7 @@ function LogCard({ selectedRoutine, completed, sets, ensureSession, reload }) {
                 className={`rounded-full px-2.5 py-1 text-xs border transition-colors ${
                   done
                     ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
-                    : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+                    : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:border-brand/40'
                 }`}>
                 {done ? '✓ ' : ''}{name}
               </button>
@@ -396,7 +396,7 @@ function RoutinesCard({ routines, reload }) {
     <Card>
       <SectionTitle>Saved routines</SectionTitle>
 
-      <div className="rounded-xl border border-white/10 p-3 mb-4">
+      <div className="glass-soft rounded-xl p-3 mb-4">
         <Field label="Routine name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Push day" /></Field>
         <div className="mt-2 flex items-end gap-2">
           <Field label="Add exercise">
@@ -409,9 +409,9 @@ function RoutinesCard({ routines, reload }) {
         {exercises.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {exercises.map((ex, i) => (
-              <span key={i} className="inline-flex items-center gap-1 rounded-full bg-indigo-500/15 px-2.5 py-1 text-xs text-indigo-300">
+              <span key={i} className="inline-flex items-center gap-1 rounded-full bg-brand/15 px-2.5 py-1 text-xs text-brand-cyan ring-1 ring-brand/25">
                 {ex}
-                <button onClick={() => setExercises(exercises.filter((_, j) => j !== i))} className="text-indigo-300/70 hover:text-white">×</button>
+                <button onClick={() => setExercises(exercises.filter((_, j) => j !== i))} className="text-brand-cyan/70 hover:text-white">×</button>
               </span>
             ))}
           </div>
@@ -424,7 +424,7 @@ function RoutinesCard({ routines, reload }) {
       <ul className="space-y-2">
         {routines.length === 0 && <Empty>No routines saved yet.</Empty>}
         {routines.map((r) => (
-          <li key={r.id} className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-slate-950/50 px-3 py-2">
+          <li key={r.id} className="flex items-start justify-between gap-3 glass-soft rounded-xl px-3 py-2">
             <div>
               <p className="text-sm font-medium text-white">{r.name}</p>
               <p className="text-xs text-slate-400">{(r.exercises ?? []).join(' · ') || '—'}</p>

@@ -99,7 +99,7 @@ function WeekCard({ avgMin, nights, goalHours, onSaveGoal }) {
   return (
     <Card>
       <SectionTitle right={<span className="text-xs text-slate-500">This week</span>}>Average sleep</SectionTitle>
-      <p className="text-3xl font-extrabold text-white">{fmtHm(avgMin)}</p>
+      <p className="text-3xl font-extrabold text-gradient-brand">{fmtHm(avgMin)}</p>
       <p className="text-xs text-slate-400 mb-4">over {nights} night{nights === 1 ? '' : 's'} logged</p>
 
       <ProgressBar label="vs. goal" unit="h" value={avgMin / 60} max={goalHours} color="bg-violet-500" />
