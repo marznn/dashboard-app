@@ -111,6 +111,22 @@ export function weekStartStr() {
   return localDateStr(d)
 }
 
+// Current month as { start, end } YYYY-MM-DD (end = first of next month, exclusive)
+export function monthRange() {
+  const d = new Date()
+  const start = localDateStr(new Date(d.getFullYear(), d.getMonth(), 1))
+  const end = localDateStr(new Date(d.getFullYear(), d.getMonth() + 1, 1))
+  return { start, end }
+}
+
+export function monthLabel() {
+  return new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+}
+
+export function fmtMoney(n) {
+  return (Number(n) || 0).toLocaleString(undefined, { style: 'currency', currency: 'USD' })
+}
+
 // Minutes between two "HH:MM" times, wrapping past midnight (e.g. 23:00→07:00 = 8h)
 export function sleepMinutes(bedtime, wake) {
   if (!bedtime || !wake) return 0

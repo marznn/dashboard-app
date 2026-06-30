@@ -7,6 +7,7 @@ import Workout from './pages/Workout.jsx'
 import Nutrition from './pages/Nutrition.jsx'
 import Sleep from './pages/Sleep.jsx'
 import Water from './pages/Water.jsx'
+import Finance from './pages/Finance.jsx'
 
 export default function App() {
   const { session, loading } = useAuth()
@@ -32,7 +33,7 @@ export default function App() {
             <Route path="/nutrition" element={<Nutrition />} />
             <Route path="/sleep" element={<Sleep />} />
             <Route path="/water" element={<Water />} />
-            <Route path="/finance" element={<Placeholder title="Finance Tracker" />} />
+            <Route path="/finance" element={<Finance />} />
             <Route path="/calendar" element={<Placeholder title="Calendar" />} />
             <Route path="/goals" element={<Placeholder title="Goals" />} />
             <Route path="*" element={<Placeholder title="Not found" />} />
