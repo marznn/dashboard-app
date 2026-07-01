@@ -36,7 +36,7 @@ function NavRow({ section, onClick }) {
       onClick={onClick}
       className={({ isActive }) =>
         [
-          'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all',
+          'group flex items-center gap-3 rounded-xl px-3 py-1.5 text-sm font-semibold transition-all',
           isActive ? 'glass text-white' : 'text-slate-400 hover:text-white',
         ].join(' ')
       }
@@ -64,7 +64,7 @@ function SignOutRow() {
   return (
     <button
       onClick={() => supabase.auth.signOut()}
-      className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-white transition-colors text-left w-full"
+      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-400 hover:text-white transition-colors text-left w-full"
     >
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg glass-soft" aria-hidden>↪</span>
       Sign out
@@ -74,12 +74,12 @@ function SignOutRow() {
 
 export function Sidebar() {
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:my-4 md:ml-4 rounded-2xl glass px-4 py-6 z-20 overflow-y-auto">
-      <div className="mb-8 shrink-0"><Brand /></div>
-      <nav className="flex-1 space-y-1.5">
+    <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:my-4 md:ml-4 rounded-2xl glass px-4 py-5 z-20 overflow-y-auto">
+      <div className="mb-5 shrink-0"><Brand /></div>
+      <nav className="flex-1 space-y-1">
         {sections.map((s) => <NavRow key={s.to} section={s} />)}
       </nav>
-      <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5 shrink-0">
+      <div className="mt-2 pt-2 border-t border-white/10 space-y-1 shrink-0">
         <NavRow section={settingsItem} />
         <SignOutRow />
       </div>
@@ -113,18 +113,18 @@ export function MobileTopBar() {
         <div className="md:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-72 max-w-[80%] glass border-r border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col overflow-y-auto">
-            <div className="flex items-center justify-between mb-6 shrink-0">
+            <div className="flex items-center justify-between mb-5 shrink-0">
               <Brand />
               <button onClick={() => setOpen(false)} aria-label="Close menu" className="p-1 text-slate-400 hover:text-white">✕</button>
             </div>
-            <nav className="flex-1 space-y-1.5">
+            <nav className="flex-1 space-y-1">
               {sections.map((s) => <NavRow key={s.to} section={s} onClick={() => setOpen(false)} />)}
             </nav>
-            <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5 shrink-0">
+            <div className="mt-2 pt-2 border-t border-white/10 space-y-1 shrink-0">
               <NavRow section={settingsItem} onClick={() => setOpen(false)} />
               <button
                 onClick={() => { setOpen(false); supabase.auth.signOut() }}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-white transition-colors text-left w-full"
+                className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-slate-400 hover:text-white transition-colors text-left w-full"
               >
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg glass-soft" aria-hidden>↪</span>
                 Sign out

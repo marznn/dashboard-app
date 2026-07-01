@@ -126,7 +126,7 @@ function AddCard({ reload }) {
   return (
     <Card>
       <SectionTitle>Add transaction</SectionTitle>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Field label="Type">
           <Select value={type} onChange={(e) => { setType(e.target.value); setCategory('') }}>
             <option value="expense">Expense</option>
@@ -145,7 +145,7 @@ function AddCard({ reload }) {
         <Field label="Date">
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Field label="Note (optional)">
             <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Whole Foods" />
           </Field>

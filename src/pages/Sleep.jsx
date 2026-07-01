@@ -76,8 +76,8 @@ function LogCard({ logs, reload }) {
   return (
     <Card>
       <SectionTitle>Log a night</SectionTitle>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="sm:col-span-2">
           <Field label="Date"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
         </div>
         <Field label="Bedtime"><Input type="time" value={bedtime} onChange={(e) => setBedtime(e.target.value)} /></Field>

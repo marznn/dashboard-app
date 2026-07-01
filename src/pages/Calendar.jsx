@@ -155,8 +155,8 @@ function DayPanel({ selected, events, reload }) {
     <Card>
       <SectionTitle>{label}</SectionTitle>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="sm:col-span-2">
           <Field label="Title"><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Dentist appointment" /></Field>
         </div>
         <Field label="Time"><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></Field>
