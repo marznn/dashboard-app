@@ -47,7 +47,10 @@ export function Button({ children, variant = 'primary', className = '', ...props
 
 export function Field({ label, children }) {
   return (
-    <label className="block">
+    // min-w-0 lets this shrink inside grid/flex rows — without it, a native
+    // input/select's intrinsic width can push past its column and overlap
+    // the next field (e.g. Calendar's Time + Reminder row).
+    <label className="block min-w-0">
       {label && <span className="block text-xs font-medium text-slate-400 mb-1.5">{label}</span>}
       {children}
     </label>

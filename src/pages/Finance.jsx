@@ -15,7 +15,6 @@ export default function Finance() {
   const [budget, setBudget] = useState(0)
 
   async function loadAll() {
-    setLoading(true)
     const [t, s] = await Promise.all([
       supabase.from('transactions').select('*').gte('date', start).lt('date', end).order('date', { ascending: false }),
       supabase.from('user_settings').select('monthly_budget').maybeSingle(),
@@ -186,13 +185,13 @@ function TxnsCard({ txns, reload }) {
       <ul className="space-y-1.5">
         {txns.length === 0 && <Empty>No transactions yet.</Empty>}
         {txns.map((t) => (
-          <li key={t.id} className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2">
-              <span className={`inline-block h-2 w-2 rounded-full ${t.type === 'income' ? 'bg-emerald-400' : 'bg-red-400'}`} />
+          <li key={t.id} className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <span className="flex min-w-0 items-center gap-2">
+              <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${t.type === 'income' ? 'bg-emerald-400' : 'bg-red-400'}`} />
               <span className="text-slate-200">{t.category}</span>
-              {t.note && <span className="text-xs text-slate-500">— {t.note}</span>}
+              {t.note && <span className="truncate text-xs text-slate-500">— {t.note}</span>}
             </span>
-            <span className="flex items-center gap-3">
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className={`text-sm font-medium ${t.type === 'income' ? 'text-emerald-400' : 'text-slate-200'}`}>
                 {t.type === 'income' ? '+' : '−'}{fmtMoney(t.amount)}
               </span>

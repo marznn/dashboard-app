@@ -9,7 +9,6 @@ export default function Goals() {
   const [goals, setGoals] = useState([])
 
   async function loadAll() {
-    setLoading(true)
     const { data } = await supabase.from('goals').select('*').order('created_at', { ascending: false })
     setGoals(data ?? [])
     setLoading(false)

@@ -20,7 +20,6 @@ export default function Workout() {
   const [settings, setSettings] = useState(null)
 
   async function loadAll() {
-    setLoading(true)
     const [r, st, cg, sess] = await Promise.all([
       supabase.from('routines').select('*').order('created_at', { ascending: false }),
       supabase.from('step_logs').select('steps').eq('date', today).maybeSingle(),

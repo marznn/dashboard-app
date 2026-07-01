@@ -13,7 +13,6 @@ export default function Water() {
   const [goal, setGoal] = useState(64)
 
   async function loadAll() {
-    setLoading(true)
     const [w, s] = await Promise.all([
       supabase.from('water_logs').select('oz').eq('date', today).maybeSingle(),
       supabase.from('user_settings').select('water_goal_oz').maybeSingle(),

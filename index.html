@@ -48,9 +48,15 @@
     />
     <style>
       /* ---------- Vision UI base ---------- */
+      /* html gets the same solid color so iOS Safari's rubber-band overscroll
+         (which reveals whatever is behind body) never flashes white. */
+      html {
+        background: #070b1c;
+      }
       body {
         position: relative;
         min-height: 100vh;
+        min-height: 100dvh;
         background:
           linear-gradient(159.02deg, #0f123b 14.25%, #090d2e 56.45%, #020515 100%);
         background-attachment: fixed;

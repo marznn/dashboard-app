@@ -14,7 +14,6 @@ export default function Nutrition() {
   const [saved, setSaved] = useState([])
 
   async function loadAll() {
-    setLoading(true)
     const [p, m, s] = await Promise.all([
       supabase.from('nutrition_profile').select('*').maybeSingle(),
       supabase.from('meals').select('*').eq('date', today).order('created_at', { ascending: true }),

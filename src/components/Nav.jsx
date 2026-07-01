@@ -74,12 +74,12 @@ function SignOutRow() {
 
 export function Sidebar() {
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:my-4 md:ml-4 rounded-2xl glass px-4 py-6 z-20">
-      <div className="mb-8"><Brand /></div>
+    <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:my-4 md:ml-4 rounded-2xl glass px-4 py-6 z-20 overflow-y-auto">
+      <div className="mb-8 shrink-0"><Brand /></div>
       <nav className="flex-1 space-y-1.5">
         {sections.map((s) => <NavRow key={s.to} section={s} />)}
       </nav>
-      <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+      <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5 shrink-0">
         <NavRow section={settingsItem} />
         <SignOutRow />
       </div>
@@ -112,15 +112,15 @@ export function MobileTopBar() {
       {open && (
         <div className="md:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[80%] glass border-r border-white/10 p-4 flex flex-col">
-            <div className="flex items-center justify-between mb-6">
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[80%] glass border-r border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col overflow-y-auto">
+            <div className="flex items-center justify-between mb-6 shrink-0">
               <Brand />
               <button onClick={() => setOpen(false)} aria-label="Close menu" className="p-1 text-slate-400 hover:text-white">✕</button>
             </div>
-            <nav className="flex-1 space-y-1.5 overflow-y-auto">
+            <nav className="flex-1 space-y-1.5">
               {sections.map((s) => <NavRow key={s.to} section={s} onClick={() => setOpen(false)} />)}
             </nav>
-            <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+            <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5 shrink-0">
               <NavRow section={settingsItem} onClick={() => setOpen(false)} />
               <button
                 onClick={() => { setOpen(false); supabase.auth.signOut() }}

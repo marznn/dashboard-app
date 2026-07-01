@@ -12,7 +12,6 @@ export default function Sleep() {
   const [settings, setSettings] = useState(null)
 
   async function loadAll() {
-    setLoading(true)
     const [l, s] = await Promise.all([
       supabase.from('sleep_logs').select('*').gte('date', weekStart).order('date', { ascending: false }),
       supabase.from('user_settings').select('*').maybeSingle(),
@@ -124,9 +123,9 @@ function NightsCard({ logs, reload }) {
       <ul className="space-y-1.5">
         {logs.length === 0 && <Empty>No nights logged this week.</Empty>}
         {logs.map((l) => (
-          <li key={l.id} className="flex items-center justify-between text-sm">
+          <li key={l.id} className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
             <span className="text-slate-200">{l.date}</span>
-            <span className="flex items-center gap-3">
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="text-xs text-slate-400">{l.bedtime} → {l.wake_time} · {fmtHm(l.minutes)}</span>
               <button onClick={async () => { await supabase.from('sleep_logs').delete().eq('id', l.id); reload() }}
                 className="text-xs text-red-400 hover:underline">Delete</button>
