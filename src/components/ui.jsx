@@ -61,7 +61,10 @@ export function Input(props) {
   return (
     <input
       {...props}
-      className={`glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 ${props.className ?? ''}`}
+      // "block" (not the input default of inline-block) because iOS Safari's
+      // native date/time inputs sometimes ignore width:100% on inline-block
+      // elements, rendering narrower and left-anchored with a visible gap.
+      className={`block glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 ${props.className ?? ''}`}
     />
   )
 }
@@ -70,7 +73,7 @@ export function Select(props) {
   return (
     <select
       {...props}
-      className={`glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none ${props.className ?? ''}`}
+      className={`block glass-input w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none ${props.className ?? ''}`}
     />
   )
 }
