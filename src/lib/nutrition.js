@@ -11,12 +11,15 @@ const ACTIVITY_FACTORS = {
   very_active: 1.9,
 }
 
+// Labels spell out INTENSITY, not just day-count — "I work out 5-6 days/week"
+// isn't enough to tell moderate and active apart, and picking the wrong one
+// swings the estimate by 300+ calories (activity factors below).
 export const ACTIVITY_OPTIONS = [
-  { value: 'sedentary', label: 'Sedentary (little/no exercise)' },
-  { value: 'light', label: 'Light (1–3 days/week)' },
-  { value: 'moderate', label: 'Moderate (3–5 days/week)' },
-  { value: 'active', label: 'Active (6–7 days/week)' },
-  { value: 'very_active', label: 'Very active (hard daily / physical job)' },
+  { value: 'sedentary', label: 'Sedentary — desk job, little/no exercise' },
+  { value: 'light', label: 'Light — easy exercise 1–3 days/week' },
+  { value: 'moderate', label: 'Moderate — regular workouts 3–5 days/week' },
+  { value: 'active', label: 'Active — hard/intense training 6–7 days/week' },
+  { value: 'very_active', label: 'Very active — very hard training 2x/day, or a physical job' },
 ]
 
 // Direction derived from current vs goal weight (±2 lb dead-band = maintain)
