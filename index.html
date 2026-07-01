@@ -197,6 +197,17 @@
       /* ---------- Form controls ---------- */
       input[type='range'] { accent-color: #0075ff; }
       input[type='checkbox'] { accent-color: #0075ff; }
+      /* Strip the native menulist-button rendering WebKit uses for date/time
+         inputs — its internal icon+text layout doesn't reliably share the
+         same box model as a plain input even with identical CSS, which is
+         what caused these to look misaligned next to sibling elements. This
+         hands the whole box back to our own CSS. Tapping still opens the
+         native iOS date/time picker; only the closed-state appearance changes. */
+      input[type='date'],
+      input[type='time'] {
+        -webkit-appearance: none;
+        appearance: none;
+      }
       /* Native date/time picker indicators on dark glass */
       input[type='date']::-webkit-calendar-picker-indicator,
       input[type='time']::-webkit-calendar-picker-indicator {
