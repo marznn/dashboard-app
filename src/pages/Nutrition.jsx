@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { computeTargets, deriveGoal, ACTIVITY_OPTIONS, GOAL_LABEL } from '../lib/nutrition.js'
+import { searchFoods } from '../lib/foodSearch.js'
 import {
   PageHeader, Card, SectionTitle, Button, Field, Input, Select, Empty, ProgressBar, todayStr,
 } from '../components/ui.jsx'
@@ -217,9 +218,24 @@ function MealsCard({ meals, saved, reload, onQuickAdd }) {
     reload()
   }
 
+  function applyResult(r) {
+    setForm({
+      name: r.name,
+      calories: String(r.calories),
+      protein_g: String(r.protein_g),
+      carbs_g: String(r.carbs_g),
+      fat_g: String(r.fat_g),
+    })
+  }
+
   return (
     <Card>
       <SectionTitle right={<span className="text-xs text-slate-500">Today</span>}>Log a meal</SectionTitle>
+
+      <div className="mb-3">
+        <p className="text-xs text-slate-500 mb-1.5">Search a food to autofill macros</p>
+        <FoodSearchBox onPick={applyResult} />
+      </div>
 
       {saved.length > 0 && (
         <div className="mb-3">
@@ -264,6 +280,81 @@ function MealsCard({ meals, saved, reload, onQuickAdd }) {
         ))}
       </ul>
     </Card>
+  )
+}
+
+// Debounced live search against USDA FoodData Central; click a result to autofill the form above it.
+function FoodSearchBox({ onPick }) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [status, setStatus] = useState('idle') // idle | loading | done | error
+  const [errorMsg, setErrorMsg] = useState('')
+  const [open, setOpen] = useState(false)
+  const abortRef = useRef(null)
+  const debounceRef = useRef(null)
+
+  function onChange(e) {
+    const v = e.target.value
+    setQuery(v)
+    setOpen(true)
+    clearTimeout(debounceRef.current)
+    abortRef.current?.abort()
+
+    if (v.trim().length < 2) {
+      setResults([])
+      setStatus('idle')
+      return
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      const controller = new AbortController()
+      abortRef.current = controller
+      setStatus('loading')
+      try {
+        const found = await searchFoods(v, controller.signal)
+        setResults(found)
+        setStatus('done')
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setErrorMsg(err.message || 'Search failed — try again.')
+          setStatus('error')
+        }
+      }
+    }, 400)
+  }
+
+  return (
+    <div className="relative">
+      <Input
+        value={query}
+        onChange={onChange}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="e.g. grilled chicken breast"
+      />
+      {open && query.trim().length >= 2 && (
+        <div className="absolute z-10 mt-1.5 w-full max-h-64 overflow-y-auto rounded-xl glass p-1.5">
+          {status === 'loading' && <p className="px-2.5 py-2 text-xs text-slate-500">Searching…</p>}
+          {status === 'error' && <p className="px-2.5 py-2 text-xs text-red-400">{errorMsg}</p>}
+          {status === 'done' && results.length === 0 && (
+            <p className="px-2.5 py-2 text-xs text-slate-500">No matches. Try a simpler term.</p>
+          )}
+          {results.map((r, i) => (
+            <button
+              key={i}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); onPick(r); setOpen(false) }}
+              className="block w-full rounded-lg px-2.5 py-2 text-left text-sm text-slate-200 hover:bg-white/10"
+            >
+              <span className="block truncate">{r.name}</span>
+              <span className="block text-xs text-slate-500">
+                per {r.basis} · {r.calories} cal · {r.protein_g}p / {r.carbs_g}c / {r.fat_g}f
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

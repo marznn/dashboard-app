@@ -49,14 +49,18 @@ supabase/               One SQL migration file per phase (run manually in Supaba
 2. **Nutrition** — profile (height/weight/age/gender/**body fat %**, goal weight, goal body fat %,
    activity). Direction (cut/maintain/bulk) is **derived** from current vs goal weight (±2 lb dead-band).
    Protein from lean body mass. Log meals vs targets. **Saved meals** (`saved_meals` table) are
-   reusable macro presets — save once, one-tap quick-add to any day.
+   reusable macro presets — save once, one-tap quick-add to any day. **Food search**
+   (`lib/foodSearch.js`) autofills macros from USDA FoodData Central while logging a meal — see
+   below for why that API specifically.
 3. **Sleep** — bedtime/wake per night (past-midnight wrap handled), weekly average vs sleep goal.
 4. **Water** — daily oz goal, tap-to-add running total per day.
 5. **Finance** — monthly budget, income/expense by category, totals + remaining + breakdown.
 6. **Calendar** — month grid, events (date/time/title/reminder/done). Browser notifications fire
    only while a tab is open (no push server).
 7. **Goals** — title/detail/target date + 0–100% progress.
-8. **Home / OVR** — see below.
+8. **Home / OVR** — see below. Also hosts **Today** (in-app "have you logged X yet" nudges — no
+   push notifications, only surfaces while the app is open) and **Weekly recap** (OVR movement,
+   wins, focus-next, running streaks over the trailing 7 days).
 
 ## OVR (Overall Life Rating) — persistent
 `src/lib/ovr.js`, persisted on `user_settings`. **Everyone starts at 50.** Each calendar day the
@@ -85,6 +89,22 @@ placeholder until points accumulate. Everything else works from day one.
 `src/pages/Settings.jsx` (`/settings`). Edit display **name** (stored in Supabase auth
 `user_metadata.full_name`, written via `supabase.auth.updateUser`; dashboard greets
 "{firstName}'s Dashboard"), toggle the 7 OVR categories on/off, and view the current OVR.
+
+## Food search (`lib/foodSearch.js`)
+Uses **USDA FoodData Central**, not Open Food Facts. Verified (curl + real browser fetch, not
+assumption): OFF's search endpoints — legacy `/cgi/search.pl` (503, effectively deprecated),
+`/api/v2/search` (intermittent 503s), and the new `search.openfoodfacts.org` (200 OK but **no
+`Access-Control-Allow-Origin` header** — genuinely not callable client-side) — none work from a
+browser. USDA FDC returns `access-control-allow-origin: *` and works directly, no proxy/backend
+needed. Nutrient values are parsed via stable `nutrientId`s (1008 calories, 1003 protein, 1005
+carbs, 1004 fat) and are consistently per-100g/100mL regardless of food type.
+- Reads `VITE_USDA_API_KEY` (same `.env.local` pattern as the Supabase keys); falls back to the
+  public `DEMO_KEY`, which works immediately but is rate-limited (~30 req/hour) — get a free,
+  much higher-limit key in seconds at https://api.data.gov/signup/ and set it in `.env.local`
+  **and** Vercel's env vars.
+- If you're ever tempted to add Open Food Facts back: don't, without re-verifying CORS via curl
+  first (`-D -` and grep for `access-control-allow-origin`) — a working `curl` response does not
+  mean the browser can read it.
 
 ## Conventions
 - **Dates:** always stamp the **local** date on inserts via `todayStr()` (see `ui.jsx`). Do NOT rely
