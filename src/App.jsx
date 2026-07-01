@@ -36,7 +36,8 @@ export default function App() {
     <div className="min-h-screen">
       <Sidebar />
       <MobileTopBar />
-      <main className="md:pl-72 pt-14 md:pt-0">
+      {/* pt-14 header height + the same safe-area-inset-top the header pads by */}
+      <main className="md:pl-72 pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-0">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 pb-10">
           <Routes>
             <Route path="/" element={<Home />} />

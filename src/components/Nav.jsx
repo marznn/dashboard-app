@@ -97,25 +97,30 @@ export function MobileTopBar() {
 
   return (
     <>
-      <header className="md:hidden fixed top-0 inset-x-0 z-30 flex items-center gap-3 h-14 px-4 glass border-b border-white/10">
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          className="-ml-1 p-1 text-slate-300 hover:text-white"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
-        <Brand />
+      {/* pt-safe-area pushes the bar's content below the iOS status bar —
+          without it, the status bar (clock/battery) overlaps the hamburger
+          icon, since viewport-fit=cover extends the page under it. */}
+      <header className="md:hidden fixed top-0 inset-x-0 z-30 glass border-b border-white/10 pt-[env(safe-area-inset-top)]">
+        <div className="flex items-center gap-3 h-14 px-4">
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="Open menu"
+            className="-ml-1 p-1 text-slate-300 hover:text-white"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <Brand />
+        </div>
       </header>
 
       {open && (
         <div className="md:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[80%] glass border-r border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col">
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[80%] glass border-r border-white/10 p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col">
             <div className="flex items-center justify-between mb-5 shrink-0">
               <Brand />
               <button onClick={() => setOpen(false)} aria-label="Close menu" className="p-1 text-slate-400 hover:text-white">✕</button>
