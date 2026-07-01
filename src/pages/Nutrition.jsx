@@ -158,6 +158,11 @@ function ProfileCard({ profile, reload }) {
               {ACTIVITY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
           </Field>
+          <p className="mt-1.5 text-[11px] text-slate-500">
+            Most people overestimate this. If you're between two options, pick the lower one — regular
+            gym workouts most weeks is usually "Moderate," not "Active" (that tier assumes hard training
+            nearly every day).
+          </p>
         </div>
       </div>
 
