@@ -29,12 +29,11 @@ export default function Progress() {
     const startStr = hist[hist.length - 1]
 
     const [
-      water, sleep, meals, steps, cardio, sessions, settings, profile, ovrHist,
+      water, sleep, meals, cardio, sessions, settings, profile, ovrHist,
     ] = await Promise.all([
       supabase.from('water_logs').select('date, oz').gte('date', startStr),
       supabase.from('sleep_logs').select('date, minutes').gte('date', startStr),
       supabase.from('meals').select('date, calories').gte('date', startStr),
-      supabase.from('step_logs').select('date, steps').gte('date', startStr),
       supabase.from('cardio_logs').select('date').gte('date', startStr),
       supabase.from('workout_sessions').select('date').gte('date', startStr),
       supabase.from('user_settings').select('water_goal_oz, sleep_goal_hours').maybeSingle(),
@@ -46,7 +45,6 @@ export default function Progress() {
       water: water.data ?? [],
       sleep: sleep.data ?? [],
       meals: meals.data ?? [],
-      steps: steps.data ?? [],
       cardio: cardio.data ?? [],
       sessions: sessions.data ?? [],
       settings: settings.data,
@@ -69,7 +67,6 @@ export default function Progress() {
   const ozByDay = sumByDay(data.water, 'date', 'oz')
   const minByDay = sumByDay(data.sleep, 'date', 'minutes')
   const calByDay = sumByDay(data.meals, 'date', 'calories')
-  const stepsByDay = sumByDay(data.steps, 'date', 'steps')
   const ovrByDay = Object.fromEntries(data.ovrHist.map((r) => [r.date, Number(r.ovr)]))
 
   // --- streaks ---
@@ -80,7 +77,6 @@ export default function Progress() {
     : []
   const calStreak = computeStreak(calDates, today)
   const activityDays = [...new Set([
-    ...Object.keys(stepsByDay).filter((d) => stepsByDay[d] > 0),
     ...data.cardio.map((r) => r.date),
     ...data.sessions.map((r) => r.date),
   ])]
@@ -91,7 +87,6 @@ export default function Progress() {
   const calSeries = axis.map((d) => ({ label: shortLabel(d), value: calByDay[d] || null }))
   const waterSeries = axis.map((d) => ({ label: shortLabel(d), value: ozByDay[d] || null }))
   const sleepSeries = axis.map((d) => ({ label: shortLabel(d), value: minByDay[d] ? minByDay[d] / 60 : null }))
-  const stepsSeries = axis.map((d) => ({ label: shortLabel(d), value: stepsByDay[d] || null }))
 
   const hasOvr = data.ovrHist.length > 0
 
@@ -126,7 +121,6 @@ export default function Progress() {
         <TrendCard title="Calories / day" series={calSeries} type="bar" goal={targets?.calories ?? null} unit="" />
         <TrendCard title="Water / day" series={waterSeries} type="bar" goal={goalOz} unit=" oz" />
         <TrendCard title="Sleep / night" series={sleepSeries} type="line" goal={goalH} unit="h" format={(v) => v.toFixed(1)} />
-        <TrendCard title="Steps / day" series={stepsSeries} type="bar" goal={null} unit="" />
       </div>
     </div>
   )

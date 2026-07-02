@@ -34,7 +34,7 @@ export default function Home() {
     const [
       workoutSettings, routines, sessions, cardio, profile, meals,
       sleepLogs, userSettings, waterLogs, txns, goals, events, upcomingEvents,
-      stepLogs, ovrHistoryWeek,
+      ovrHistoryWeek,
     ] = await Promise.all([
       supabase.from('workout_settings').select('*').maybeSingle(),
       supabase.from('routines').select('id, exercises'),
@@ -49,7 +49,6 @@ export default function Home() {
       supabase.from('goals').select('progress'),
       supabase.from('events').select('done').gte('date', last7Start),
       supabase.from('events').select('*').gte('date', today).order('date', { ascending: true }).order('time', { ascending: true }).limit(5),
-      supabase.from('step_logs').select('date, steps').gte('date', last7Start),
       supabase.from('ovr_history').select('date, ovr').gte('date', last7Start).order('date', { ascending: true }),
     ])
 
@@ -76,7 +75,6 @@ export default function Home() {
       txns: txns.data ?? [],
       goals: goals.data ?? [],
       events: events.data ?? [],
-      stepLogs: stepLogs.data ?? [],
       ovrHistoryWeek: ovrHistoryWeek.data ?? [],
     }
 
@@ -148,12 +146,11 @@ function TodayNudgesCard({ bundle, enabledMap }) {
 
   const workoutDone = bundle.sessions.some((s) => s.date === today)
     || bundle.cardio.some((c) => c.date === today)
-    || bundle.stepLogs.some((s) => s.date === today && s.steps > 0)
   const mealsDone = bundle.meals.some((m) => m.date === today)
   const waterDone = bundle.waterLogs.some((w) => w.date === today && w.oz > 0)
 
   const items = [
-    { key: 'workout', to: '/workout', icon: '🏋️', label: 'Log a workout, cardio, or steps', done: workoutDone },
+    { key: 'workout', to: '/workout', icon: '🏋️', label: 'Log a workout or cardio', done: workoutDone },
     { key: 'nutrition', to: '/nutrition', icon: '🍎', label: 'Log a meal', done: mealsDone },
     { key: 'water', to: '/water', icon: '💧', label: 'Log some water', done: waterDone },
   ].filter((it) => isCategoryEnabled(enabledMap, it.key))
@@ -312,7 +309,6 @@ function WeeklyRecapCard({ bundle, cats, enabledMap, ovr }) {
     ? Object.keys(calByDay).filter((d) => Math.abs(calByDay[d] - targets.calories) <= targets.calories * 0.1)
     : []
   const activityDays = [...new Set([
-    ...bundle.stepLogs.filter((s) => s.steps > 0).map((s) => s.date),
     ...bundle.cardio.map((c) => c.date),
     ...bundle.sessions.map((s) => s.date),
   ])]

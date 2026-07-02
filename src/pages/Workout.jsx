@@ -16,18 +16,15 @@ export default function Workout() {
   const [weekSessions, setWeekSessions] = useState([])
   const [weekSets, setWeekSets] = useState([])
   const [cardio, setCardio] = useState([])
-  const [steps, setSteps] = useState('')
   const [settings, setSettings] = useState(null)
 
   async function loadAll() {
-    const [r, st, cg, sess] = await Promise.all([
+    const [r, cg, sess] = await Promise.all([
       supabase.from('routines').select('*').order('created_at', { ascending: false }),
-      supabase.from('step_logs').select('steps').eq('date', today).maybeSingle(),
       supabase.from('workout_settings').select('*').maybeSingle(),
       supabase.from('workout_sessions').select('id, date, routine_id').gte('date', weekStart),
     ])
     setRoutines(r.data ?? [])
-    setSteps(st.data ? String(st.data.steps) : '')
     setSettings(cg.data ?? { cardio_weekly_goal_min: 150, workout_weekly_goal: 5 })
 
     const sessions = sess.data ?? []
@@ -102,19 +99,20 @@ export default function Workout() {
       <PageHeader title="Workout" subtitle="Plan, log, and track today's progress." />
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <ProgressCard
-          routines={routines}
-          selectedRoutine={selectedRoutine}
-          completedCount={completed.length}
-          totalCount={routineExercises.length}
-          weeklyWorkouts={weeklyWorkouts}
-          workoutGoal={workoutGoal}
-          weekCardioMin={weekCardioMin}
-          cardioGoal={cardioGoal}
-          onPickRoutine={setTodayRoutine}
-          onSaveSetting={saveSetting}
-        />
-        <StepsCard steps={steps} setSteps={setSteps} />
+        <div className="lg:col-span-2">
+          <ProgressCard
+            routines={routines}
+            selectedRoutine={selectedRoutine}
+            completedCount={completed.length}
+            totalCount={routineExercises.length}
+            weeklyWorkouts={weeklyWorkouts}
+            workoutGoal={workoutGoal}
+            weekCardioMin={weekCardioMin}
+            cardioGoal={cardioGoal}
+            onPickRoutine={setTodayRoutine}
+            onSaveSetting={saveSetting}
+          />
+        </div>
 
         <div className="lg:col-span-2">
           <LogCard
@@ -211,32 +209,6 @@ function ProgressCard({
             )}
           </div>
         </div>
-      </div>
-    </Card>
-  )
-}
-
-function StepsCard({ steps, setSteps }) {
-  const [busy, setBusy] = useState(false)
-  async function save() {
-    setBusy(true)
-    await supabase.from('step_logs').upsert(
-      { date: todayStr(), steps: Number(steps) || 0 },
-      { onConflict: 'user_id,date' },
-    )
-    setBusy(false)
-  }
-  return (
-    <Card>
-      <SectionTitle>Steps today</SectionTitle>
-      <div className="flex items-end gap-2">
-        <Field label="Step count">
-          <Input
-            type="number" min="0" inputMode="numeric" value={steps}
-            onChange={(e) => setSteps(e.target.value)} placeholder="e.g. 8000"
-          />
-        </Field>
-        <Button onClick={save} disabled={busy}>Save</Button>
       </div>
     </Card>
   )

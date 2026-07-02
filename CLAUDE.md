@@ -43,9 +43,11 @@ supabase/               One SQL migration file per phase (run manually in Supaba
 
 ## Sections (8)
 1. **Workout** — saved routines (name + exercise list), per-day session with set/rep logging,
-   cardio, daily steps. Weekly progress bars: workouts-this-week vs goal, cardio-this-week vs goal.
+   cardio. Weekly progress bars: workouts-this-week vs goal, cardio-this-week vs goal.
    Today's routine is persisted on `workout_sessions.routine_id`; completion = all routine
-   exercises have ≥1 set that day.
+   exercises have ≥1 set that day. (The step counter was removed by request; the `step_logs`
+   table from phase1_workout.sql is still in the DB, just unused — left in place rather than
+   dropped, since removing it wasn't asked for.)
 2. **Nutrition** — profile (height/weight/age/gender/**body fat %**, goal weight, goal body fat %,
    activity). Direction (cut/maintain/bulk) is **derived** from current vs goal weight (±2 lb dead-band).
    Protein from lean body mass. Log meals vs targets. **Saved meals** (`saved_meals` table) are
@@ -81,7 +83,7 @@ persist** (in `load()`), so the score only moves while the user visits the dashb
 `src/pages/Progress.jsx` (`/progress`). Streaks + 30-day trends. Streaks (current + best) for
 water goal, sleep goal, calories-on-target, and active days via `lib/streaks.js` (derived from
 existing logs, no migration). Trend charts (`components/Chart.jsx`, hand-rolled SVG) for OVR over
-time, calories/day, water/day, sleep/night, steps/day. **OVR-over-time** reads `ovr_history`
+time, calories/day, water/day, sleep/night. **OVR-over-time** reads `ovr_history`
 (phase9) — Home writes one snapshot per day when the drift runs; the chart shows a "filling in"
 placeholder until points accumulate. Everything else works from day one.
 
